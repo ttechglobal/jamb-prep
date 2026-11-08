@@ -1,69 +1,109 @@
-import Image from "next/image";
+import Link from "next/link";
+import { BookOpenCheck, Check, Clock, Trophy, Zap } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
+import { Meter } from "@/components/game/game-ui";
+import { StartPractisingButton } from "@/components/landing/start-practising-button";
+import { InstallButton } from "@/components/pwa/install-button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export default function Home() {
+const MODES = [
+  { icon: Zap, label: "Quick Five", hint: "5 questions, instantly", tint: "bg-gold-soft text-gold-ink" },
+  { icon: BookOpenCheck, label: "Topic Practice", hint: "Drill weak topics", tint: "bg-sky-soft text-sky" },
+  { icon: Clock, label: "Timed Practice", hint: "Beat the clock", tint: "bg-flame-soft text-flame" },
+  { icon: Trophy, label: "Mock Exam", hint: "Full UTME CBT", tint: "bg-violet-soft text-violet" },
+];
+
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex min-h-dvh flex-col">
+      <div className="bg-brand-deep text-white">
+        <header className="mx-auto flex h-14 w-full max-w-5xl items-center px-4">
+          <Logo tone="light" />
+          <Link
+            href="/login"
+            className="ml-auto inline-flex h-11 items-center rounded-xl px-3 font-display font-semibold text-white hover:bg-white/10"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            Sign in
+          </Link>
+        </header>
+
+        <section className="mx-auto grid w-full max-w-5xl items-center gap-10 px-4 pb-12 pt-6 sm:pt-10 lg:grid-cols-[1fr_22rem] lg:pb-16">
+          <div>
+            <p className="font-display text-sm font-semibold tracking-wide text-gold">For JAMB UTME candidates</p>
+            <h1 className="mt-2 text-[2.6rem] font-semibold leading-[1.05] text-balance sm:text-6xl">
+              Level up for your UTME
+            </h1>
+            <p className="mt-4 max-w-md text-lg leading-snug text-white/80 text-pretty">
+              Quick rounds, instant explanations and full CBT mocks. Earn XP and keep your streak going.
+            </p>
+
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <StartPractisingButton />
+              <Link
+                href="/register"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "xl" }),
+                  "w-full border-2 border-white/30 text-white hover:bg-white/10 hover:text-white sm:w-auto",
+                )}
+              >
+                Create free account
+              </Link>
+            </div>
+            <p className="mt-3 text-sm text-white/70">No sign-up needed to start.</p>
+            <InstallButton className="mt-3" />
+          </div>
+
+          <HeroPreview />
+        </section>
+      </div>
+
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Practice modes">
+          {MODES.map(({ icon: Icon, label, hint, tint }) => (
+            <li key={label} className="game-card p-4">
+              <span className={cn("grid size-10 place-items-center rounded-xl", tint)}>
+                <Icon className="size-5" strokeWidth={2.4} aria-hidden />
+              </span>
+              <p className="mt-3 font-display font-semibold leading-tight">{label}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+            </li>
+          ))}
+        </ul>
       </main>
+
+      <footer className="mx-auto w-full max-w-5xl px-4 py-6 text-xs text-muted-foreground">
+        JAMB Prep is an independent practice tool by Exam Prep A1 and is not affiliated with JAMB.
+      </footer>
+    </div>
+  );
+}
+
+/** A static glimpse of a round, so the game idea lands without any explanation. */
+function HeroPreview() {
+  return (
+    <div aria-hidden className="mx-auto w-full max-w-xs rotate-1 rounded-3xl border-b-[6px] border-black/25 bg-white p-4 text-foreground lg:max-w-none">
+      <div className="flex items-center gap-2">
+        <Meter percent={60} label="Round progress" className="flex-1" barClassName="bg-brand-bright" />
+        <span className="font-display text-sm font-semibold">3/5</span>
+      </div>
+      <p className="mt-4 text-sm font-semibold leading-snug">
+        Choose the option nearest in meaning: The manager was CANDID about the losses.
+      </p>
+      <div className="mt-3 space-y-2 text-sm">
+        <div className="flex items-center gap-2.5 rounded-xl border-2 border-b-4 p-2">
+          <span className="grid size-7 place-items-center rounded-lg bg-muted text-xs font-bold">A</span> secretive
+        </div>
+        <div className="flex items-center gap-2.5 rounded-xl border-2 border-b-4 border-success bg-success-soft p-2 font-semibold">
+          <span className="grid size-7 place-items-center rounded-lg bg-success text-white">
+            <Check className="size-4" strokeWidth={3} />
+          </span>
+          frank
+          <span className="ml-auto inline-flex items-center gap-0.5 rounded-full bg-gold px-2 py-0.5 font-display text-xs text-gold-ink">
+            +2 XP
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
