@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BookOpenCheck, Check, Clock, Trophy, Zap } from "lucide-react";
+import { TrackView } from "@/components/analytics/track-view";
 import { Logo } from "@/components/brand/logo";
 import { Meter } from "@/components/game/game-ui";
 import { StartPractisingButton } from "@/components/landing/start-practising-button";
@@ -17,6 +18,7 @@ const MODES = [
 export default function LandingPage() {
   return (
     <div className="flex min-h-dvh flex-col">
+      <TrackView name="landing_view" />
       <div className="bg-brand-deep text-white">
         <header className="mx-auto flex h-14 w-full max-w-5xl items-center px-4">
           <Logo tone="light" />

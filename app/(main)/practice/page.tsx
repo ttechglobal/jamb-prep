@@ -95,7 +95,7 @@ export default function PracticePage() {
               icon={Gamepad2}
               tint="bg-gold-soft text-gold-ink"
               title="Games"
-              description="Drill grammar by playing"
+              description="Practise by playing"
               className="lg:hidden"
             />
           </section>
@@ -123,7 +123,7 @@ export default function PracticePage() {
           icon={Gamepad2}
           tint="bg-gold-soft text-gold-ink"
           title="Games"
-          description="Drill grammar by playing"
+          description="Practise by playing"
           className="hidden min-h-0 lg:flex"
         />
         </div>

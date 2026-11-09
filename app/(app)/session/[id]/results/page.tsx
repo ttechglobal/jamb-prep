@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { Confetti, Meter, Stars, SubjectIcon } from "@/components/game/game-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { track } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
 import { data } from "@/lib/data";
 import { MODE_LABEL } from "@/lib/engine/presets";
@@ -64,6 +65,7 @@ function Results() {
       if (cancelled) return;
       setResult(r);
       if (!r) return;
+      void track("round_completed", { mode: r.config.mode, guest: isGuest, session_id: id });
       const recorded = await data.recordResult(r);
       if (cancelled) return;
       setReward(recorded.reward);

@@ -37,20 +37,21 @@ const SLIDES = [
  * the device (on iPhone, reminders only work from here).
  */
 export function InstalledWelcome() {
-  const { installed, reminders, busy, toggleReminders } = usePwa();
+  const { standalone, reminders, busy, toggleReminders } = usePwa();
   const { hydrated, account } = useAppState();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (!installed || !hydrated) return;
+    // Only the installed app, never a browser tab: installing from the website must not trigger it.
+    if (!standalone || !hydrated) return;
     try {
       if (localStorage.getItem(SEEN)) return;
     } catch {
       return;
     }
     setOpen(true);
-  }, [installed, hydrated]);
+  }, [standalone, hydrated]);
 
   if (!open) return null;
 

@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, MailCheck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { track, trackOnce } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
 
 type Mode = "login" | "register";
@@ -30,6 +31,10 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
   const copy = COPY[mode];
 
+  useEffect(() => {
+    if (mode === "register") trackOnce("register_view");
+  }, [mode]);
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -47,10 +52,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
         await login(email, password);
         // The account gate sends students who haven't finished setup to onboarding.
         router.push("/practice");
-      } else if ((await register(email, password)) === "confirm_email") {
-        setConfirmEmail(email);
       } else {
-        router.push("/onboarding");
+        const result = await register(email, password);
+        void track("register_submitted", { confirmEmail: result === "confirm_email" });
+        if (result === "confirm_email") setConfirmEmail(email);
+        else router.push("/onboarding");
       }
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : "That didn't work. Try again." });

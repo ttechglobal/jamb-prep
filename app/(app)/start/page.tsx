@@ -8,6 +8,7 @@ import { Logo } from "@/components/brand/logo";
 import { SubjectIcon } from "@/components/game/game-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { useStartSession } from "@/hooks/use-start-session";
+import { TrackView } from "@/components/analytics/track-view";
 import { useAppState } from "@/lib/app-state";
 import { data } from "@/lib/data";
 import { quickFive } from "@/lib/engine/presets";
@@ -47,6 +48,7 @@ function SubjectPicker() {
   if (!account && roundsUsed >= GUEST_FREE_ROUNDS) {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col justify-center px-4 py-8 text-center">
+        <TrackView name="free_limit_reached" />
         <Logo className="mx-auto" />
         <span className="mx-auto mt-8 grid size-16 place-items-center rounded-2xl bg-gold-soft text-gold-edge">
           <Trophy className="size-8" strokeWidth={2.4} aria-hidden />

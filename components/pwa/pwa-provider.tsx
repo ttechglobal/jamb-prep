@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
 import { currentSubscription, disableReminders, enableReminders, pushSupported, relinkReminders } from "@/lib/pwa/push";
 
@@ -18,6 +19,8 @@ interface PwaState {
   /** iPhones and iPads have no install dialog: the student adds the app from the Share menu. */
   needsIosSteps: boolean;
   installed: boolean;
+  /** This page is running as the installed app (opened from the home screen), not in a browser tab. */
+  standalone: boolean;
   install(): Promise<void>;
   reminders: ReminderState;
   busy: boolean;
@@ -30,6 +33,7 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
   const { account } = useAppState();
   const [event, setEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
+  const [standalone, setStandalone] = useState(false);
   const [ios, setIos] = useState(false);
   const [reminders, setReminders] = useState<ReminderState>("unsupported");
   const [busy, setBusy] = useState(false);
@@ -38,6 +42,7 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
     const standalone =
       window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
     setInstalled(standalone);
+    setStandalone(standalone);
     setIos(/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
 
     const onPrompt = (e: Event) => {
@@ -78,7 +83,10 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
     if (!event) return;
     await event.prompt();
     const { outcome } = await event.userChoice;
-    if (outcome === "accepted") setInstalled(true);
+    if (outcome === "accepted") {
+      setInstalled(true);
+      void track("install_accepted");
+    }
     setEvent(null);
   }, [event]);
 
@@ -92,7 +100,10 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
       } else if (reminders === "off") {
         const result = await enableReminders();
         setReminders(result === "on" ? "on" : "blocked");
-        if (result === "on") toast.success("Reminders are on");
+        if (result === "on") {
+          toast.success("Reminders are on");
+          void track("reminders_enabled");
+        }
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't change reminders. Try again.");
@@ -106,12 +117,13 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
       canInstall: !!event && !installed,
       needsIosSteps: ios && !installed,
       installed,
+      standalone,
       install,
       reminders,
       busy,
       toggleReminders,
     }),
-    [event, installed, ios, install, reminders, busy, toggleReminders],
+    [event, installed, standalone, ios, install, reminders, busy, toggleReminders],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

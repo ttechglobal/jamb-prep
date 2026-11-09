@@ -26,9 +26,3 @@ export const TIMED_PRESETS = {
   defaultCount: 20,
   defaultDurationMin: 15,
 } as const;
-
-/**
- * The student's exam day, as YYYY-MM-DD in Lagos time. While this is null, reminders never mention a
- * countdown. Set it once JAMB publishes the UTME dates, and "days to go" messages switch on.
- */
-export const UTME_DATE: string | null = null;

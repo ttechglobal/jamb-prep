@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubjectPicker, isValidSubjectSelection } from "@/components/profile/subject-picker";
 import { SubjectTargets } from "@/components/profile/subject-targets";
+import { track } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
 import { UTME_FORMAT } from "@/lib/exam-format";
 import { targetsFor } from "@/lib/profile";
@@ -50,6 +51,7 @@ export default function OnboardingPage() {
     if (!last) return setStep(step + 1);
     try {
       await saveProfile({ displayName: name.trim(), subjectIds: subjects, subjectTargets: targetsFor(subjects, targets) });
+      void track("onboarding_done");
       router.push("/practice");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't save. Try again.");

@@ -9,7 +9,6 @@ type Kind = "install" | "reminders";
 
 const DELAY_MS = 30_000; // a student gets settled before being asked anything
 const REPEAT_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
-const MAX_SHOWN = 3; // after three asks we stop; Profile always has the options
 
 const key = (kind: Kind) => `jp:nudge:${kind}`;
 
@@ -23,7 +22,7 @@ function read(kind: Kind): { shown: number; at: number } {
 
 function due(kind: Kind) {
   const { shown, at } = read(kind);
-  return shown < MAX_SHOWN && Date.now() - at >= (shown === 0 ? 0 : REPEAT_AFTER_MS);
+  return Date.now() - at >= (shown === 0 ? 0 : REPEAT_AFTER_MS);
 }
 
 function markShown(kind: Kind) {
@@ -49,7 +48,7 @@ const nudgedThisSession = () => {
  * a browser remembers a "Block" and never asks again.
  *
  * Order: "install the app" on the first visit, "turn on reminders" on a later visit, or sooner when
- * installing isn't possible. Each is repeated every 3 days if ignored, up to 3 times.
+ * installing isn't possible. Each comes back every 3 days until it is done; there is no cap.
  */
 export function AppNudges() {
   const pwa = usePwa();
