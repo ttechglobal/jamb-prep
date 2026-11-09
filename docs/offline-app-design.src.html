@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAMB Prep apps - UI design</title>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<style>
+/* Built by scripts/build-offline-design.mjs. Edit offline-app-design.src.html, then run the script. */
+@font-face{font-family:"Fredoka";src:url(__FONT_FREDOKA__) format("woff2");font-weight:300 700}
+@font-face{font-family:"Jakarta";src:url(__FONT_JAKARTA__) format("woff2");font-weight:200 800}
+:root{
+  --brand-deep:#14532D;--brand-bright:#22C55E;--background:#F5F9F6;--foreground:#17231C;--card:#fff;
+  --primary:#15803D;--primary-edge:#0F5C2C;--secondary:#E6F4EA;--secondary-foreground:#14532D;
+  --muted:#E9EFEB;--muted-foreground:#55655C;--destructive:#C2281C;
+  --success:#15803D;--success-soft:#DCFCE7;--danger-soft:#FEE4E2;--warning-soft:#FEF3C7;
+  --gold:#FBBF24;--gold-edge:#D97706;--gold-soft:#FEF3C7;--gold-ink:#713F12;
+  --flame:#EA580C;--flame-soft:#FFEDD5;--sky:#0369A1;--sky-soft:#E0F2FE;--violet:#6D28D9;--violet-soft:#EDE9FE;
+  --border:#DAE3DD;--input:#C6D2CB;
+  --pattern:url("__PATTERN__");
+}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe5e1;color:var(--foreground);font-family:Jakarta,system-ui,sans-serif;font-size:16px;line-height:1.5}
+h1,h2,h3,.d{font-family:Fredoka,"Trebuchet MS",sans-serif}
+.doc{max-width:1120px;margin:0 auto;padding:32px 20px 80px}
+.doc>h1{font-size:30px;margin:0 0 6px}.doc>p{color:#444;margin:0 0 20px;max-width:780px}
+.spec{background:#fff;border-radius:12px;padding:16px 20px;margin:0 0 20px;font-size:14px}
+.spec h3{margin:0 0 6px;font-size:18px}.spec table{border-collapse:collapse;width:100%}
+.spec td{padding:5px 8px 5px 0;vertical-align:top;border-top:1px solid #eee}.spec td:first-child{white-space:nowrap;font-weight:600;width:150px}
+.tog{display:flex;gap:8px;align-items:center;margin:0 0 24px;font-size:14px;flex-wrap:wrap}
+.tog button{font:inherit;font-weight:600;border:2px solid #b9c4bd;background:#fff;border-radius:99px;padding:5px 14px;cursor:pointer}
+.tog button.on{border-color:var(--primary);background:var(--secondary);color:var(--secondary-foreground)}
+.grp{font-size:26px;margin:48px 0 4px;padding-top:12px;border-top:3px solid #b9c4bd}
+.grpd{margin:0 0 20px;color:#444;max-width:820px;font-size:14px}
+section.s{margin:0 0 40px}section.s>h2{font-size:21px;margin:0 0 4px}
+section.s>p{margin:0 0 12px;color:#444;max-width:840px;font-size:14px}
+.frames{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.dk,.mb{background:var(--background);border:2px solid #b9c4bd;border-radius:14px;overflow:hidden;position:relative}
+.dk{width:1000px;flex:none;display:flex}.dk.top{flex-direction:column}.mb{width:375px;display:flex;flex-direction:column}
+.canvas{background-color:var(--background);background-image:var(--pattern);background-size:560px 560px;flex:1;min-width:0}
+/* header and nav */
+.hd{height:64px;border-bottom:2px solid var(--border);background:rgba(245,249,246,.96);display:flex;align-items:center;gap:20px;padding:0 16px;flex:none}
+.hd .nav{display:flex;gap:4px}
+.hd .nav span{padding:8px 12px;border-radius:12px;font-family:Fredoka;font-weight:600;color:var(--muted-foreground);font-size:15px}
+.hd .nav span.on{background:var(--secondary);color:var(--secondary-foreground)}
+.hd .r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.logo{display:flex;align-items:center;gap:8px;font-family:Fredoka;font-weight:600;font-size:18px}.logo b{color:var(--primary);font-weight:600}
+.logo svg{height:44px;width:auto}
+.chipinfo{font-size:12px;color:var(--muted-foreground);border:2px solid var(--border);border-radius:99px;padding:4px 10px;background:#fff;white-space:nowrap}
+.av{width:40px;height:40px;border-radius:50%;border:2px solid var(--primary);border-bottom-width:4px;background:var(--secondary);color:var(--secondary-foreground);display:grid;place-items:center;font-family:Fredoka;font-weight:600}
+.sb{width:224px;flex:none;background:var(--brand-deep);color:#fff;padding:16px 12px;display:flex;flex-direction:column;gap:4px;border-right:4px solid #0d3b20}
+.sb .logo{color:#fff;padding:0 6px 14px}.sb .logo b{color:var(--gold)}
+.sb .it{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;font-family:Fredoka;font-weight:600;font-size:16px;color:rgba(255,255,255,.82)}
+.sb .it svg{width:20px;height:20px}
+.sb .it.on{background:#fff;color:var(--primary);border-bottom:4px solid #bfd6c8}
+.sb .me{margin-top:auto;background:rgba(255,255,255,.1);border-radius:16px;padding:12px;font-size:13px}
+.sb .me b{font-family:Fredoka;font-size:15px;display:block;font-weight:600}
+.sb .me span{opacity:.75;font-size:12px}
+.sb .pill{background:var(--warning-soft);color:var(--gold-ink);margin-top:8px}
+.bn{display:flex;border-top:2px solid var(--border);background:#fff;padding:6px 6px 10px;flex:none}
+.bn div{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted-foreground)}
+.bn div i{width:56px;height:30px;border-radius:99px;display:grid;place-items:center}.bn svg{width:22px;height:22px}
+.bn div.on{color:var(--primary)}.bn div.on i{background:var(--secondary)}
+.mbtop{height:60px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:2px solid var(--border);background:rgba(245,249,246,.96);flex:none}
+.mbtop .logo svg{height:40px}
+.mbtop .r{margin-left:auto;display:flex;gap:6px}
+.pg{padding:20px 16px 24px}.dk .pg{padding:24px 28px 32px}
+.wrap{max-width:900px;margin:0 auto}
+.pg h1{font-size:30px;line-height:1.15;margin:0;font-weight:600}.dk .pg h1{font-size:34px}
+.pg .sub{color:var(--muted-foreground);margin:2px 0 16px}
+/* components */
+.gc{background:var(--card);border:2px solid var(--border);border-bottom-width:5px;border-radius:21.6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:Fredoka;font-weight:600;letter-spacing:.02em;border-radius:12px;height:44px;padding:0 16px;background:var(--primary);color:#fff;box-shadow:0 4px 0 var(--primary-edge);border:0;font-size:16px;white-space:nowrap}
+.btn.xl{height:56px;border-radius:16px;font-size:18px;width:100%}.btn.sm{height:34px;font-size:13px;padding:0 12px;box-shadow:0 3px 0 var(--primary-edge)}
+.btn.white{background:#fff;color:var(--primary);box-shadow:0 4px 0 rgba(0,0,0,.22)}
+.btn.out{background:var(--card);color:var(--foreground);border:2px solid var(--border);box-shadow:0 3px 0 var(--border)}
+.btn.gold{background:var(--gold);color:var(--gold-ink);box-shadow:0 4px 0 var(--gold-edge)}
+.btn svg{width:18px;height:18px}
+.chip{border:2px solid var(--border);border-bottom-width:4px;border-radius:16px;background:var(--card);height:48px;min-width:56px;padding:0 16px;font-weight:600;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:12px}
+.chip.on{border-color:var(--primary);background:var(--secondary);color:var(--secondary-foreground)}
+.chip.list{min-height:56px;height:auto;padding:6px 12px;justify-content:flex-start;text-align:left;width:100%}
+.chip .h{margin-left:auto;font-size:12px;font-weight:600;color:var(--muted-foreground);display:inline-flex;align-items:center;gap:4px}
+.chip .h svg{width:16px;height:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.g1{display:grid;gap:8px}
+.lab{font-family:Fredoka;font-weight:600;font-size:18px;margin:0 0 8px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted-foreground);font-weight:500;font-size:14px;height:40px}.back svg{width:16px;height:16px}
+.sbadge{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;flex:none}.sbadge svg{width:28px;height:28px}
+.si{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}.si svg{width:20px;height:20px}
+.si.sm{width:32px;height:32px;border-radius:8px}.si.sm svg{width:16px;height:16px}
+.setup{max-width:560px;margin:0 auto}.setup .body{margin-top:24px;display:flex;flex-direction:column;gap:24px}
+.setup .foot{border-top:2px solid var(--border);background:var(--background);margin:32px -16px 0;padding:12px 16px 4px}
+.dk .setup .foot{margin:32px -28px 0;padding:12px 28px 4px}
+.note{font-size:12px;color:var(--muted-foreground);text-align:center;margin:8px 0 0}
+.fld{height:48px;border:2px solid var(--input);border-radius:12px;background:#fff;padding:0 12px;display:flex;align-items:center;font-size:15px;justify-content:space-between}
+.fl{font-weight:600;font-size:14px;margin:0 0 6px}
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--warning-soft);color:var(--gold-ink);border-radius:12px;padding:12px;font-size:14px}
+.banner svg{width:16px;height:16px;margin-top:3px;flex:none}
+.hero{background:var(--primary);color:#fff;border-radius:24px;border-bottom:6px solid var(--primary-edge);padding:20px}
+.hero h2{font-size:32px;margin:0;line-height:1.1}.hero p{margin:2px 0 0;font-size:15px;opacity:.85}
+.zap{width:48px;height:48px;border-radius:16px;background:var(--gold);color:var(--gold-ink);display:grid;place-items:center;flex:none}
+.zap svg{width:24px;height:24px}
+.hero ul{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hero .btn{height:56px;justify-content:flex-start;width:100%;padding:0 10px;font-size:15px}
+.hero .btn .tail{margin-left:auto;opacity:.6;display:flex}
+.mode{padding:16px;min-height:120px;display:flex;flex-direction:column}
+.mode .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center}.mode .ic svg{width:20px;height:20px}
+.mode p{margin:auto 0 0;padding-top:12px;font-family:Fredoka;font-weight:600;font-size:17px;line-height:1.15}
+.mode small{color:var(--muted-foreground);font-size:12px;margin-top:2px}
+.two{display:grid;gap:16px}.dk .two{grid-template-columns:minmax(0,1fr) 17rem;align-items:start}
+.rows>div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid var(--border);font-size:14px}
+.rows>div:first-child{border-top:0}.rows small{color:var(--muted-foreground)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--success-soft);color:var(--primary-edge)}
+.pill svg{width:12px;height:12px}.pill.n{background:var(--muted);color:var(--muted-foreground)}.pill.w{background:var(--warning-soft);color:var(--gold-ink)}
+.rb{width:40px;height:40px;border-radius:50%;border:2px solid var(--primary);border-bottom-width:4px;background:#fff;color:var(--primary);display:inline-grid;place-items:center;flex:none}
+.rb svg,.chip .h .rb svg{width:18px;height:18px}.rb.u{border-color:var(--gold-edge);color:var(--gold-ink);background:var(--gold-soft)}
+.rb.g{border-color:var(--border);color:var(--muted-foreground);width:36px;height:36px}
+.okc{width:28px;height:28px;border-radius:50%;background:var(--success-soft);color:var(--primary);display:inline-grid;place-items:center;flex:none}.okc svg,.chip .h .okc svg{width:16px;height:16px}
+.masbox{border:2px dashed var(--input);border-radius:16px;font-size:11px;color:var(--muted-foreground);text-align:center;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.6);overflow:hidden}
+.masbox.has{border:0;background:none;overflow:visible}.masbox.has .t{display:none}.masbox img{width:100%;height:100%;object-fit:contain}
+.meter{height:12px;border-radius:99px;background:var(--muted);overflow:hidden}.meter i{display:block;height:100%;background:var(--gold);border-radius:99px}
+.camp{display:flex;gap:12px;align-items:center;background:var(--gold-soft);border:2px solid var(--gold);border-bottom-width:5px;border-radius:21.6px;padding:12px 14px}
+.camp .zap{width:44px;height:44px}.camp .zap svg{width:22px;height:22px}
+.xpp,.stk{display:inline-flex;align-items:center;gap:4px;height:36px;border-radius:99px;padding:0 10px;font-family:Fredoka;font-weight:600;font-size:14px}
+.xpp{background:var(--gold-soft);color:var(--gold-ink)}.stk{background:var(--flame-soft)}
+.xpp svg,.xp svg{width:15px;height:15px;fill:var(--gold);color:var(--gold-edge)}.stk svg{width:15px;height:15px;fill:var(--flame);color:var(--flame)}
+.opt{display:flex;align-items:center;gap:12px;min-height:60px;border:2px solid var(--border);border-bottom-width:5px;border-radius:16px;background:#fff;padding:10px 12px;font-weight:500;margin-bottom:10px}
+.opt .k{width:36px;height:36px;border-radius:12px;background:var(--muted);display:grid;place-items:center;font-family:Fredoka;font-weight:600;flex:none}
+.opt.ok{border-color:var(--success);background:var(--success-soft);font-weight:600}.opt.ok .k{background:var(--success);color:#fff}
+.opt.no{border-color:var(--destructive);background:var(--danger-soft)}.opt.no .k{background:var(--destructive);color:#fff}.opt.dim{opacity:.6}
+.fb{border:2px solid var(--success);border-bottom-width:6px;background:var(--success-soft);border-radius:16px;padding:16px}
+.fb .t{display:flex;align-items:center;gap:12px;font-family:Fredoka;font-weight:600;font-size:20px;color:var(--primary-edge)}
+.fb .t i{width:40px;height:40px;border-radius:50%;background:var(--success);color:#fff;display:grid;place-items:center}.fb .t svg{width:22px;height:22px}
+.sbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:13px}
+.sbar .x{width:36px;height:36px;display:grid;place-items:center;color:var(--muted-foreground)}
+.sbar .pg2{flex:1;height:12px;border-radius:99px;background:var(--muted);overflow:hidden}.sbar .pg2 i{display:block;height:100%;background:var(--primary);border-radius:99px}
+.lb{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--border)}.lb:first-child{border-top:0}
+.rank{width:32px;height:32px;border-radius:50%;background:var(--muted);display:grid;place-items:center;font-family:Fredoka;font-weight:600;font-size:14px}
+.rank.r1{background:var(--gold);color:var(--gold-ink)}.rank.r2{background:#E5E7EB}.rank.r3{background:#FDE0C2;color:#7C2D12}
+.xp{display:inline-flex;align-items:center;gap:4px;background:var(--gold-soft);color:var(--gold-ink);font-family:Fredoka;font-weight:600;font-size:14px;border-radius:99px;padding:3px 10px}
+.lb.me{background:var(--secondary)}
+.sheet{position:absolute;inset:0;background:rgba(23,35,28,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{background:var(--card);width:100%;border-radius:24px 24px 0 0;padding:20px}
+.dk .sheet{align-items:center}.dk .sheet>div{width:480px;border-radius:24px}
+.step{display:flex;gap:12px;align-items:flex-start;margin:0 0 12px;font-size:14px}
+.step b{width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-family:Fredoka;flex:none}
+.qr{width:96px;height:96px;border:2px dashed var(--input);border-radius:12px;display:grid;place-items:center;font-size:11px;color:var(--muted-foreground);flex:none;text-align:center;padding:6px}
+.link{display:inline-block;font-family:ui-monospace,Menlo,monospace;background:var(--muted);border-radius:8px;padding:2px 8px;font-size:13px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{background:rgba(233,239,235,.6);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted-foreground);padding:10px 16px}
+.tbl td{border-top:1px solid var(--border);padding:10px 16px}.tbl td+td,.tbl th+th{text-align:right}
+.tbl tfoot td{background:rgba(233,239,235,.3);font-weight:600}
+.step2{display:flex;align-items:center;gap:10px}.step2 .btn{width:44px;padding:0}
+.dash{border:2px dashed var(--input);border-radius:16px;font-size:11px;color:var(--muted-foreground);text-align:center;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.6)}
+.mid{display:flex;flex-direction:column;align-items:center;text-align:center}
+.lvl{display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:center}
+.lock{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--border);border-bottom-width:4px;background:#fff;font-family:Fredoka;font-weight:600}
+.lock.d{background:var(--secondary);border-color:var(--primary)}.lock.l{color:var(--muted-foreground);background:var(--muted)}.lock svg{width:16px;height:16px}
+.patt{width:420px;height:200px;border:2px solid #b9c4bd;border-radius:12px;background-color:var(--background);background-image:var(--pattern);background-size:560px 560px}
+</style>
+</head>
+<body>
+<div class="doc">
+<h1>JAMB Prep apps: UI design</h1>
+<p>Three products, one design language: <b>student mobile</b> (Android), <b>student desktop</b> and <b>school desktop</b> (Windows). Tokens, fonts, cards and buttons are the web app's (<code>app/globals.css</code>, Fredoka and Plus Jakarta Sans, embedded in this file). Flutter must reuse the same values.</p>
+
+<div class="spec"><h3>Rules for all three</h3><table>
+<tr><td>Platforms</td><td><b>Mobile is for students only.</b> It opens exactly like the web app (landing, sign in, onboarding). There is no "school or student" choice on mobile. <b>The Windows app asks "School or Student" on first launch.</b> School mode exists only there.</td></tr>
+<tr><td>Logo</td><td>The real logo: graduation cap with the gold JAMB band underneath (<code>components/brand/logo.tsx</code>, labelled version), then "JAMB Prep". The logo is always at the top. Nothing sits before it.</td></tr>
+<tr><td>Navigation</td><td>Mobile: bottom bar (Practice, Games, Leaderboard, Downloads, Profile). Desktop: a deep green sidebar with the logo at the top and the active item as a white pill (decided). <b>No navigation appears during a practice session or on a setup screen.</b> It shows again on results.</td></tr>
+<tr><td>Download</td><td>A round icon button, never the word and no file sizes. Ready shows a small check, an update a round refresh button, downloading a progress bar. A Downloads page in the navigation (school and student) manages everything.</td></tr>
+<tr><td>Campaigns</td><td>A banner at the bottom of Home, "Tap for details". It exists only while the admin page has an active campaign for that audience and date range.</td></tr>
+<tr><td>Mascot</td><td>Optional. Nothing depends on it. When it arrives it sits beside the welcome text, never before the logo.</td></tr>
+<tr><td>Background</td><td>A soft pattern of subject icons (books, atoms, flasks, maps) behind the page, under the cards. Asset: <code>docs/assets/learning-pattern.svg</code>. Cards stay solid white so reading is never harder.</td></tr>
+</table></div>
+<div id="out"></div>
+</div>
+
+<script>
+var NAV='side';
+var SUBJ=[['english','English','book-open','#1D4ED8','#DBEAFE'],['mathematics','Mathematics','calculator','#6D28D9','#EDE9FE'],['physics','Physics','atom','#C2410C','#FFEDD5'],['chemistry','Chemistry','flask-conical','#BE185D','#FCE7F3'],['biology','Biology','leaf','#15803D','#DCFCE7'],['economics','Economics','coins','#A16207','#FEF9C3'],['government','Government','landmark','#0F766E','#CCFBF1'],['literature','Literature','scroll-text','#B91C1C','#FEE2E2'],['commerce','Commerce','store','#4338CA','#E0E7FF'],['accounting','Accounting','receipt','#047857','#D1FAE5'],['crk','CRK','cross','#7E22CE','#F3E8FF']];
+function ic(n,s){return '<i data-lucide="'+n+'"'+(s?' style="'+s+'"':'')+'></i>'}
+function si(i,sm){var s=SUBJ[i];return '<span class="si'+(sm?' sm':'')+'" style="background:'+s[4]+';color:'+s[3]+'">'+ic(s[2])+'</span>'}
+function logo(light,wm){var board=light?'#fff':'#15803D',crown=light?'#BBF7D0':'#14532D';return '<div class="logo"><svg viewBox="0 0 110 108"><path d="M26 46 v22 q29 18 58 0 v-22 L55 58 z" fill="'+crown+'"/><polygon points="55,6 106,32 55,58 4,32" fill="'+board+'"/><path d="M106 32 V66" stroke="#FBBF24" stroke-width="4.5" stroke-linecap="round"/><circle cx="106" cy="72" r="6.5" fill="#FBBF24"/><rect x="18" y="78" width="74" height="26" rx="8" fill="#FBBF24"/><text x="55" y="97" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="18" font-weight="700" fill="#713F12">JAMB</text></svg>'+(wm===false?'':'<span>JAMB <b>Prep</b></span>')+'</div>'}
+function dlb(){return '<span class="rb">'+ic('download')+'</span>'}
+function ready(){return '<span class="okc">'+ic('check')+'</span>'}
+function upd(){return '<span class="rb u">'+ic('refresh-cw')+'</span>'}
+function trash(){return '<span class="rb g">'+ic('trash-2')+'</span>'}
+function masBox(sz,label){return '<span class="masbox" style="width:'+sz+'px;height:'+sz+'px"><span class="t">'+(label||'Mascot<br>(optional)')+'</span><img src="assets/mascot.png" alt="" onload="this.parentNode.classList.add(\'has\');this.parentNode.querySelector(\'.t\').style.display=\'none\'" onerror="this.remove()"></span>'}
+function masSmall(sz){return '<img src="assets/mascot.png" alt="" style="display:none;width:'+sz+'px;height:'+sz+'px;object-fit:contain;flex:none" onload="this.style.display=\'block\'" onerror="this.remove()">'}
+function welcomeHead(t,s){return '<div style="display:flex;gap:12px;align-items:center">'+masSmall(68)+'<div><h1>'+t+'</h1><p class="sub" style="margin:2px 0 16px">'+s+'</p></div></div>'}
+function pillsHtml(){return '<span class="stk">'+ic('flame')+'3</span><span class="xpp">'+ic('zap')+'820</span>'}
+var SNAV=[['Home','house'],['Practice','book-open-check'],['Games','gamepad-2'],['Leaderboard','trophy'],['History','history'],['Downloads','download'],['Settings','settings']];
+var TNAV=[['Practice','house'],['Games','gamepad-2'],['Leaderboard','trophy'],['Downloads','download'],['Profile','user']];
+function sidebar(role,on){var items=role==='school'?SNAV:TNAV;var me=role==='school'?'<div class="me"><b>Govt College Ikeja</b><span>GCI-001</span></div>':'<div class="me"><b>Ada Okafor</b><span>Level 4 &middot; 820 XP</span></div>';return '<div class="sb">'+logo(true)+items.map(function(x){return '<div class="it'+(x[0]===on?' on':'')+'">'+ic(x[1])+x[0]+'</div>'}).join('')+me+'</div>'}
+function topbar(role,on){var items=role==='school'?SNAV.slice(1):TNAV;return '<div class="hd">'+logo(false)+'<div class="nav">'+items.map(function(x){return '<span class="'+(x[0]===on?'on':'')+'">'+x[0]+'</span>'}).join('')+'</div><div class="r">'+(role==='school'?'<span class="chipinfo">Govt College Ikeja &middot; GCI-001</span><span class="av">G</span>':pillsHtml()+'<span class="av">A</span>')+'</div></div>'}
+function dk(role,on,content,extra){if(NAV==='side')return '<div class="dk">'+sidebar(role,on)+'<div class="canvas">'+content+'</div>'+(extra||'')+'</div>';return '<div class="dk top">'+topbar(role,on)+'<div class="canvas">'+content+'</div>'+(extra||'')+'</div>'}
+function dkFocus(content,extra){return '<div class="dk"><div class="canvas">'+content+'</div>'+(extra||'')+'</div>'}
+function bnav(on){return '<div class="bn">'+TNAV.map(function(x){return '<div class="'+(x[0]===on?'on':'')+'"><i>'+ic(x[1])+'</i>'+x[0]+'</div>'}).join('')+'</div>'}
+function mb(content,on,extra){return '<div class="mb"><div class="mbtop">'+logo(false)+'<div class="r">'+pillsHtml()+'</div></div><div class="canvas">'+content+'</div>'+(on?bnav(on):'')+(extra||'')+'</div>'}
+function mbFocus(content,extra){return '<div class="mb"><div class="canvas">'+content+'</div>'+(extra||'')+'</div>'}
+function sec(t,d,f){return '<section class="s"><h2>'+t+'</h2><p>'+d+'</p><div class="frames">'+f+'</div></section>'}
+function grp(t,d){return '<h2 class="grp">'+t+'</h2><p class="grpd">'+d+'</p>'}
+function setupHead(back,badge,title,desc){return '<span class="back">'+ic('arrow-left')+' '+back+'</span><div style="display:flex;gap:12px;align-items:center;margin-top:4px">'+badge+'<div><h1 style="font-size:30px!important">'+title+'</h1><div style="font-size:14px;color:var(--muted-foreground);line-height:1.3">'+desc+'</div></div></div>'}
+function chipsRow(a,sel){return '<div class="chips">'+a.map(function(x,i){return '<span class="chip'+(i===sel?' on':'')+'">'+x+'</span>'}).join('')+'</div>'}
+function startBar(label,note){return '<div class="foot"><span class="btn xl">'+label+' '+ic('arrow-right')+'</span>'+(note?'<p class="note">'+note+'</p>':'')+'</div>'}
+function offBtn(label,ico){return '<span class="btn out sm">'+(ico?ic(ico):'')+label+'</span>'}
+
+/* shared content blocks */
+function pageHead(t,s){return '<h1>'+t+'</h1><p class="sub">'+s+'</p>'}
+function quick(list,more,mobile){return '<div class="hero"><div style="display:flex;gap:12px;align-items:center"><span class="zap">'+ic('zap','fill:#FBBF24;color:#D97706')+'</span><div><h2>Quick Five</h2><p>Five questions. Pick a subject to start.</p></div></div><ul>'+list.map(function(i){var s=SUBJ[i[0]];return '<li><span class="btn white">'+si(i[0],1)+'<span style="flex:1;text-align:left">'+s[1]+'</span>'+(i[1]?'<span class="tail">'+ic('download')+'</span>':'')+'</span></li>'}).join('')+'</ul>'+(more?'<div style="margin-top:12px"><span class="btn white" style="width:auto;height:44px;padding:0 14px">More subjects '+ic('chevron-down')+'</span></div>':'')+'</div>'}
+function modes(cols,withGames){var d=[['book-open-check','Subject Practice','Pick a subject and topic','var(--sky-soft)','var(--sky)'],['clock','Timed Practice','Beat the clock','var(--flame-soft)','var(--flame)'],['trophy','Mock Exam','Full UTME CBT, 2 hours','var(--violet-soft)','var(--violet)'],['gamepad-2','Games','Practise by playing','var(--gold-soft)','var(--gold-ink)']];if(!withGames)d=d.slice(0,3);return '<div style="display:grid;grid-template-columns:repeat('+cols+',1fr);gap:12px">'+d.map(function(x){return '<div class="gc mode"><span class="ic" style="background:'+x[3]+';color:'+x[4]+'">'+ic(x[0])+'</span><p>'+x[1]+'</p><small>'+x[2]+'</small></div>'}).join('')+'</div>'}
+function camp(){return '<div class="camp"><span class="zap">'+ic('gift','fill:none;color:#713F12')+'</span><div style="flex:1"><b class="d" style="font-size:17px">Christmas tournament</b><div style="font-size:13px">Tap for details</div></div>'+ic('chevron-right')+'</div>'}
+function pending(){return '<div class="banner" style="margin-bottom:14px">'+ic('info')+'<span>Your school is not registered yet. <b>Finish registration</b> when you are online.</span></div>'}
+function badgeHex(n){return '<span style="position:relative;display:inline-grid;width:48px;height:48px;place-items:center"><svg viewBox="0 0 48 52" style="position:absolute;inset:0;width:100%;height:100%"><path d="M24 4 L44 15 V37 L24 48 L4 37 V15 Z" transform="translate(0 3)" fill="#D97706" stroke="#D97706" stroke-width="5" stroke-linejoin="round"/><path d="M24 3 L44 14 V36 L24 47 L4 36 V14 Z" fill="#FBBF24" stroke="#FBBF24" stroke-width="5" stroke-linejoin="round"/></svg><b class="d" style="position:relative;font-size:18px;color:#713F12;margin-top:-2px">'+n+'</b></span>'}
+function progressCard(){return '<div class="gc" style="padding:16px"><div class="lvl">'+badgeHex(4)+'<div><div style="display:flex;justify-content:space-between;gap:8px"><b class="d" style="font-size:16px">Scholar</b><span style="font-size:12px;color:var(--muted-foreground)">80 XP to level 5</span></div><div class="meter" style="margin-top:6px"><i style="width:62%"></i></div></div></div><div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;font-weight:500;color:var(--muted-foreground)">'+ic('target','width:20px;height:20px;color:var(--primary)')+'<span style="flex:1">Your desired JAMB score</span><b class="d" style="font-size:20px;color:var(--foreground)">280<span style="font-size:13px;color:var(--muted-foreground)"> / 400</span></b>'+ic('chevron-right','width:16px;height:16px')+'</div></div>'}
+function lbRows(me){var n=[['Ada O.','2,340'],['Tunde A.','2,115'],['Ifeoma N.','1,980'],['Chidi E.','1,760'],['Bola S.','1,640'],['Zainab M.','1,502']];return '<div class="gc" style="overflow:hidden">'+n.map(function(x,i){return '<div class="lb"><span class="rank r'+(i+1)+'">'+(i+1)+'</span><b>'+x[0]+'</b><span class="xp">'+ic('zap')+x[1]+'</span></div>'}).join('')+(me?'<div class="lb me"><span class="rank">23</span><b>You</b><span class="xp">'+ic('zap')+'820</span></div>':'')+'</div>'}
+function results(role){var s='<div class="mid" style="padding-top:8px">'+masSmall(110)+'<div style="display:flex;gap:6px;align-items:flex-end">'+[0,1,2].map(function(i){return ic('star','width:'+(i==1?64:48)+'px;height:'+(i==1?64:48)+'px;fill:'+(i<2?'#FBBF24':'#E9EFEB')+';color:'+(i<2?'#D97706':'#DAE3DD')+';stroke-width:1.6;'+(i==1?'margin-bottom:8px':''))}).join('')+'</div><h1 style="margin-top:8px">Great job!</h1><p class="sub" style="margin-bottom:8px">English &middot; 16 of 20 correct</p>'+(role==='student'?'<span class="xpp" style="height:40px;font-size:18px">'+ic('zap')+'+34 XP</span>':'')+'</div><div class="gc rows" style="margin:16px 0"><div><span>Accuracy</span><b>80%</b></div><div><span>Time</span><b>12 min</b></div><div><span>Hardest topic</span><b>Lexis and structure</b></div></div><div class="g1"><span class="btn xl">Review answers</span><span class="btn xl out">Practise again</span></div>';if(role==='school')s+='<div class="gc" style="padding:12px 14px;margin-top:14px;background:var(--secondary);border-color:var(--primary);font-size:13px"><b class="d" style="font-size:15px">Want to keep your progress?</b><br>Create a free student account on your phone.</div>';return s}
+function lbSchool(){return pageHead('Leaderboard','Top students by XP. Updated when online.')+'<div style="display:flex;gap:6px;margin-bottom:12px"><span class="chip on" style="height:40px">This week</span><span class="chip" style="height:40px">All time</span></div>'+lbRows(0)+'<div class="gc" style="padding:16px;margin-top:16px;background:var(--secondary);border-color:var(--primary)"><b class="d" style="font-size:18px">Want your name here?</b><div style="font-size:14px;margin:4px 0 12px">Practising in school does not save your name. Create your free student account on your phone to join the board and keep your progress at home.</div><span class="btn">Show how to sign up</span></div>'}
+function signSheet(){return '<div class="sheet"><div><b class="d" style="font-size:22px">Join on your phone</b><p style="margin:4px 0 16px;color:var(--muted-foreground);font-size:14px">It takes about a minute and it is free.</p><div style="display:flex;gap:14px;margin-bottom:8px"><div style="flex:1"><div class="step"><b>1</b><span>Search for <b>JAMB Prep</b> on Google, visit <span class="link">your-link-here</span>, or scan the code.</span></div><div class="step"><b>2</b><span>Tap Create account and pick your four subjects.</span></div><div class="step"><b>3</b><span>Practise. Your name appears here once you have XP.</span></div></div><div class="qr">QR code for the link</div></div><span class="btn xl">Done</span></div></div>'}
+function campSheet(){return '<div class="sheet"><div><div style="display:flex;gap:12px;align-items:center"><span class="zap" style="background:var(--gold)">'+ic('gift','fill:none;color:#713F12')+'</span><div><b class="d" style="font-size:22px">Christmas tournament</b><div style="font-size:13px;color:var(--muted-foreground)">1 to 21 December</div></div></div><p style="margin:14px 0 16px;font-size:15px">Practise every day for three weeks and climb the board. Top students win prizes. Create your free student account to take part.</p><span class="btn xl gold">Got it</span></div></div>'}
+function sumPage(m){return pageHead('History','Sessions on this computer.')+'<div class="gc rows"><div><span style="display:flex;gap:10px;align-items:center">'+si(0,1)+'<span>English &middot; Quick Five<br><small>Today, 10:42</small></span></span><b>4 / 5</b></div><div><span style="display:flex;gap:10px;align-items:center">'+si(1,1)+'<span>Mathematics &middot; Subject practice<br><small>Today, 10:15</small></span></span><b>31 / 50</b></div><div><span style="display:flex;gap:10px;align-items:center"><span class="si sm" style="background:var(--violet-soft);color:var(--violet)">'+ic('trophy')+'</span><span>Mock exam &middot; 3 subjects<br><small>Yesterday</small></span></span><b>158 / 300</b></div></div>'}
+function question(m){return '<div class="sbar"><span class="x">'+ic('x')+'</span><span class="pg2"><i style="width:35%"></i></span><span style="color:var(--muted-foreground);font-weight:600">12:40</span></div><div style="display:flex;gap:8px;align-items:center">'+si(0,1)+'<div style="font-size:12px;line-height:1.25"><b>English</b><br><span style="color:var(--muted-foreground)">Question 7 of 20 &middot; Lexis and structure</span></div></div><p style="font-size:19px;font-weight:600;line-height:1.5;margin:14px 0">Choose the option that best completes the sentence: Neither of the boys ___ ready.</p><div class="opt dim"><span class="k">A</span>are</div><div class="opt ok"><span class="k">'+ic('check')+'</span>is</div><div class="opt no"><span class="k">'+ic('x')+'</span>were</div><div class="opt dim"><span class="k">D</span>have been</div><div class="fb"><div class="t"><i>'+ic('check')+'</i>Correct!</div><p style="margin:10px 0 0;font-size:15px">Neither takes a singular verb.</p><div style="margin-top:12px;height:44px;border-radius:12px;background:rgba(245,249,246,.7);display:grid;place-items:center;font-weight:600;font-size:14px">View full explanation</div></div><div style="margin-top:14px"><span class="btn xl">Next '+ic('arrow-right')+'</span></div>'}
+function gamesPage(role){return pageHead('Games','Learn by playing.')+'<div class="gc" style="padding:16px;display:flex;gap:12px;align-items:center"><span class="sbadge" style="background:var(--sky-soft);color:var(--sky);width:56px;height:56px">'+ic('pen-line')+'</span><div style="flex:1;min-width:0"><b class="d" style="font-size:20px;line-height:1.15;display:block">Concord</b><span style="font-size:14px;color:var(--muted-foreground);display:block;margin-top:2px">English: is or are? has or have? Drag the right word in. 3/12 levels cleared.</span></div></div>'}
+function downloads(role){var subs=role==='school'?[0,1,2,3,4,5,6,7,8,9,10]:[0,1,2,3];var st={0:'r',1:'r',2:'p',4:'u'};var rows=subs.map(function(i){var k=st[i]||'d';var ctl=k==='r'?ready()+trash():k==='u'?upd()+trash():k==='p'?'<span class="rb g">'+ic('x')+'</span>':dlb();var mid=k==='p'?'<div class="meter" style="margin-top:6px;width:100%"><i style="width:64%"></i></div>':'';return '<div class="chip list" style="'+(k==='p'?'display:block':'')+'"><div style="display:flex;align-items:center;gap:12px;width:100%">'+si(i)+'<span style="flex:1">'+SUBJ[i][1]+(k==='u'?'<br><small style="font-weight:400;color:var(--muted-foreground)">Update available</small>':'')+'</span><span style="display:flex;gap:8px;align-items:center">'+ctl+'</span></div>'+mid+'</div>'}).join('');return pageHead('Downloads','Subjects on this device. Once downloaded, they work offline.')+'<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap"><span class="btn out sm">'+ic('refresh-cw')+'Update all</span><span class="btn sm">'+ic('download')+'Get all</span></div><div class="g1">'+rows+'</div><p class="note" style="text-align:left;margin-top:12px">91 MB used on this device.</p>'}
+function profile(){return '<div class="mid" style="padding:4px 0 14px"><span class="av" style="width:72px;height:72px;font-size:28px;border-width:3px;border-bottom-width:6px">A</span><h1 style="margin-top:8px;font-size:26px!important">Ada Okafor</h1><span style="font-size:13px;color:var(--muted-foreground)">Free plan</span></div>'+progressCard()+'<div class="gc" style="padding:14px 16px;margin-top:12px"><b class="d" style="font-size:17px">My subjects</b><div class="chips" style="margin-top:8px">'+[0,1,2,3].map(function(i){return '<span class="chip" style="height:40px;padding:0 10px 0 6px;gap:8px;font-size:14px">'+si(i,1)+SUBJ[i][1]+'</span>'}).join('')+'</div></div><div class="gc rows" style="margin-top:12px"><div><span>Reminders</span>'+ic('chevron-right','width:16px')+'</div><div><span>Upgrade to Premium</span><span class="pill w">Unlock all</span></div><div><span>Sign out</span>'+ic('log-out','width:16px')+'</div></div>'}
+function subjSetup(){return '<div class="setup">'+setupHead('Practice','<span class="sbadge" style="background:'+SUBJ[0][4]+';color:'+SUBJ[0][3]+'">'+ic('book-open')+'</span>','English','Set up your practice.')+'<div class="body"><div><p class="lab">Questions</p>'+chipsRow(['5','10','20','30','40','Custom'],2)+'</div><div><p class="lab">Mode</p><div class="grid2"><span class="chip list on" style="display:block;padding:10px 12px"><b>Practice</b><div style="font-size:12px;font-weight:400;color:var(--muted-foreground)">Answers at the end</div></span><span class="chip list" style="display:block;padding:10px 12px"><b>Study</b><div style="font-size:12px;font-weight:400;color:var(--muted-foreground)">Answer after each question</div></span></div></div><div><p class="lab">Timer</p>'+chipsRow(['Off','5 min','10 min','15 min','20 min','25 min','Custom'],3)+'</div><div><p class="lab">Topics</p>'+chipsRow(['All topics','Comprehension','Lexis and structure','Oral forms','Literature text'],0)+'</div></div>'+startBar('Start 20 questions','About 45 seconds per question. In the real UTME you get about 40.')+'</div>'}
+
+function render(){
+var out='';
+/* GROUP A: desktop launch and school */
+out+=grp('Windows app: first launch and school mode','Only the Windows app has this. First launch asks School or Student. Mobile never shows it.');
+out+=sec('A1. Welcome (Windows app, first launch)','Logo at the top. The mascot slot sits beside the welcome text and can be removed with no gap. Student leads to the same sign in and onboarding as the web.',dkFocus('<div class="pg" style="min-height:520px"><div class="mid" style="padding-top:22px">'+logo(false).replace('class="logo"','class="logo" style="font-size:26px"').replace('<svg','<svg style="height:76px"')+'<div style="display:flex;gap:18px;align-items:center;margin:26px 0 18px;text-align:left">'+masBox(92)+'<div><h1>Welcome</h1><p class="sub" style="margin:0">Who is using this app?</p></div></div><div style="width:440px;display:grid;gap:12px"><div class="gc" style="padding:16px;display:flex;gap:14px;align-items:center;text-align:left"><span class="sbadge" style="background:var(--secondary);color:var(--primary)">'+ic('school')+'</span><div><p class="d" style="margin:0;font-size:19px;font-weight:600">I am a school</p><div style="font-size:13px;color:var(--muted-foreground)">Free. No accounts. Every subject.</div></div></div><div class="gc" style="padding:16px;display:flex;gap:14px;align-items:center;text-align:left"><span class="sbadge" style="background:var(--sky-soft);color:var(--sky)">'+ic('graduation-cap')+'</span><div><p class="d" style="margin:0;font-size:19px;font-weight:600">I am a student</p><div style="font-size:13px;color:var(--muted-foreground)">Sign in with your own account.</div></div></div></div></div></div>'));
+out+=sec('A2. Register school','Name first, then phone. Online, the phone finds an existing school and fills in the rest (shown). Prefix and number are separate. A number already used is flagged ("GCI-002 is already registered. Use 003?"). "Continue without internet" works; registration finishes later and a reminder stays on Home until then.',dkFocus('<div class="pg"><div class="setup"><span class="back">'+ic('arrow-left')+' Back</span><h1 style="font-size:30px!important">Register your school</h1><p class="sub" style="margin-bottom:0">So we know which schools use the app.</p><div class="body" style="gap:14px"><div><p class="fl">School name</p><div class="fld">Government College Ikeja</div></div><div><p class="fl">School phone number</p><div class="fld">0803 123 4567</div></div><div class="gc" style="padding:12px;border-color:var(--success);background:var(--success-soft);display:flex;gap:10px;align-items:center"><span class="si sm" style="background:var(--success);color:#fff">'+ic('check')+'</span><div style="font-size:14px"><b>We found your school.</b><br><span style="color:var(--muted-foreground)">Lagos, Ikeja. 2 devices registered.</span></div></div><div class="grid2"><div><p class="fl">State</p><div class="fld">Lagos '+ic('chevron-down')+'</div></div><div><p class="fl">Area</p><div class="fld">Ikeja</div></div></div><div><p class="fl">Device name</p><div style="display:flex;gap:8px"><div class="fld" style="flex:1">GCI</div><div class="fld" style="width:96px">003</div></div><p style="font-size:12px;color:var(--muted-foreground);margin:6px 0 0">003 is the next free number for this school.</p></div></div><div class="foot"><span class="btn xl">Register '+ic('arrow-right')+'</span><div style="margin-top:10px"><span class="btn xl out">Continue without internet</span></div><p class="note">Without internet you can still practise. We remind you to finish registering.</p></div></div></div>'));
+out+=sec('A3. First subject download','Last step that needs internet. Resumable. The icon replaces the word "Download".',dkFocus('<div class="pg"><div class="setup"><h1 style="font-size:30px!important">Get your first subject</h1><p class="sub">Add the others any time in Practice.</p><div class="g1"><div class="chip list" style="display:block;border-color:var(--primary);background:var(--secondary)"><div style="display:flex;align-items:center;gap:12px">'+si(0)+'<b>English</b></div><div class="meter" style="margin-top:8px"><i style="width:64%"></i></div><div style="font-size:12px;font-weight:400;color:var(--muted-foreground);margin-top:4px">64%</div></div><div class="chip list">'+si(1)+'Mathematics<span class="h">'+dlb('31 MB')+'</span></div><div class="chip list">'+si(2)+'Physics<span class="h">'+dlb('18 MB')+'</span></div></div><div class="foot"><span class="btn xl">Start practising '+ic('arrow-right')+'</span><p class="note">Downloads continue in the background.</p></div></div></div>'));
+
+out+=sec('S1. School home','The web practice page, adapted. Quick Five first, then Subject, Timed and Mock cards, Games and Leaderboard on the side, last session, campaign banner at the bottom. No level, target, XP or streak. Quick Five shows six subjects plus "More subjects". A download icon marks subjects not on this computer.',dk('school','Home','<div class="pg"><div class="wrap">'+welcomeHead('Welcome, Govt College Ikeja!','Ready to practice today?')+'<div class="two"><div style="display:flex;flex-direction:column;gap:16px">'+quick([[0],[1],[2],[3],[4,1],[5,1]],true)+modes(3,false)+'</div><div style="display:grid;gap:16px"><div class="gc rows"><div><b class="d" style="font-size:17px">Last session</b></div><div><span>English &middot; Quick Five</span><b>4 / 5</b></div></div><div class="gc mode"><span class="ic" style="background:var(--gold-soft);color:var(--gold-ink)">'+ic('gamepad-2')+'</span><p>Games</p><small>Practise by playing</small></div><div class="gc mode" style="min-height:0"><span class="ic" style="background:var(--gold-soft);color:var(--gold-ink)">'+ic('trophy')+'</span><p>Leaderboard</p><small>See the top students</small></div></div></div><div style="margin-top:20px">'+camp()+'</div></div></div>'));
+out+=sec('S2. School home with registration reminder','Shown at the very top until registration syncs. Never blocks practice. The campaign banner still sits at the bottom.',dk('school','Home','<div class="pg"><div class="wrap">'+pending()+''+welcomeHead('Welcome, Govt College Ikeja!','Ready to practice today?')+''+quick([[0],[1],[2],[3]],true)+'<div style="height:16px"></div>'+modes(3,false)+'</div></div>'));
+function prac(){var rows=SUBJ.map(function(s,i){var st=i<2?ready():(i==4?upd():dlb());return '<span class="chip list">'+si(i)+s[1]+'<span class="h">'+st+'</span></span>'}).join('');var md=[['zap','Quick Five','var(--gold-soft)','var(--gold-ink)'],['book-open-check','Subject','var(--sky-soft)','var(--sky)'],['clock','Timed','var(--flame-soft)','var(--flame)'],['trophy','Mock Exam','var(--violet-soft)','var(--violet)']];var row='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px">'+md.map(function(x){return '<div class="gc" style="padding:12px 14px;display:flex;align-items:center;gap:10px"><span class="si sm" style="background:'+x[2]+';color:'+x[3]+'">'+ic(x[0])+'</span><b class="d" style="font-size:15px;line-height:1.1">'+x[1]+'</b></div>'}).join('')+'</div>';return '<div class="pg"><div class="wrap">'+pageHead('Practice','Choose a mode, or pick a subject.').replace('<p class="sub">','<p class="sub" style="margin-bottom:14px">')+row+'<p class="lab">Or choose a subject</p><div class="g3">'+rows+'</div></div></div>'}
+out+=sec('S3. Practice','One compact row of modes (Quick Five, Subject, Timed, Mock Exam), then every subject below for the custom route. Subject rows show a check when ready, a round download button, or a refresh button for an update. Choosing a subject that is not on the computer downloads it first, then continues.',dk('school','Practice',prac()));
+out+=sec('S4. Subject setup (no navigation)','The web SetupShell: back link, badge, title, chips, sticky Start. Questions, Practice or Study mode, timer, topics (all or chosen). No order option.',dkFocus('<div class="pg">'+subjSetup()+'</div>'));
+function mockPick(){var sel=[0,1,2];return '<div class="pg"><div class="setup">'+setupHead('Practice','<span class="sbadge" style="background:var(--violet-soft);color:var(--violet)">'+ic('trophy')+'</span>','UTME Mock Exam','Choose up to 4 subjects. 3 chosen.')+'<div class="body"><div class="g3" style="grid-template-columns:1fr 1fr">'+SUBJ.map(function(s,i){var on=sel.indexOf(i)>-1;return '<span class="chip list'+(on?' on':'')+'">'+si(i)+s[1]+(on?'<span class="h" style="color:var(--primary)">'+ic('check')+'</span>':'')+'</span>'}).join('')+'</div></div>'+startBar('Continue',null)+'</div></div>'}
+function mockInfo(){return '<div class="pg"><div class="setup">'+setupHead('Subjects','<span class="sbadge" style="background:var(--violet-soft);color:var(--violet)">'+ic('trophy')+'</span>','Before you start','Read this, then begin.')+'<div class="body"><div class="gc" style="overflow:hidden"><table class="tbl"><thead><tr><th>Subject</th><th>Questions</th></tr></thead><tbody><tr><td><span style="display:flex;gap:12px;align-items:center">'+si(0)+'<span><b>English</b><br><small style="color:var(--muted-foreground)">50 English + 10 literature text</small></span></span></td><td>60</td></tr><tr><td><span style="display:flex;gap:12px;align-items:center">'+si(1)+'<b>Mathematics</b></span></td><td>40</td></tr><tr><td><span style="display:flex;gap:12px;align-items:center">'+si(2)+'<b>Physics</b></span></td><td>40</td></tr></tbody><tfoot><tr><td>Total</td><td>140</td></tr></tfoot></table></div><div class="gc" style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between"><div><b class="d" style="font-size:17px">Time limit</b><div style="font-size:12px;color:var(--muted-foreground)">Calculated: 93 min. You can lower it.</div></div><div class="step2"><span class="btn out">'+ic('minus')+'</span><b class="d" style="font-size:20px;min-width:70px;text-align:center">93 min</b><span class="btn out">'+ic('plus')+'</span></div></div><ul style="margin:0;padding-left:18px;font-size:14px;color:var(--muted-foreground);display:grid;gap:6px"><li>Move freely between questions and subjects, and change answers until you submit.</li><li>Each subject is scored out of 100.</li><li>Unanswered questions score zero, so answer every question.</li></ul></div>'+startBar('Start mock exam','The timer starts as soon as you begin and keeps running if you leave.')+'</div></div>'}
+out+=sec('S5. Mock exam, step 1 and 2 (no navigation)','School mode: choose up to 4 subjects from the full list. English is 60 questions with up to 10 from the literature text (all 60 from English if there are none). The instructions page shows the counts and the time at two-thirds of a minute per question. The student can lower it, never raise it.',dkFocus(mockPick())+dkFocus(mockInfo()));
+out+=sec('S6. Question and feedback (no navigation)','Reused web session screens. Study mode shows the feedback card after every answer. Practice mode shows it only in review. The only controls are exit, progress and the timer.',dkFocus('<div class="pg"><div class="setup">'+question()+'</div></div>'));
+out+=sec('S7. Results (navigation returns)','Stars, score, hardest topic. No XP in school mode. A soft "keep your progress" note, shown rarely.',dk('school','Practice','<div class="pg"><div class="setup">'+results('school')+'</div></div>'));
+out+=sec('S8. Leaderboard and "how to sign up"','Read-only board of real students. School devices never appear. The sheet gives three steps, a QR code and the link. The link is not decided yet, so it is a setting loaded from the admin page, not baked into the app.',dk('school','Leaderboard','<div class="pg"><div class="wrap" style="max-width:640px">'+lbSchool()+'</div></div>')+dk('school','Leaderboard','<div class="pg"><div class="wrap" style="max-width:640px">'+lbSchool()+'</div></div>',signSheet()));
+out+=sec('S9. Campaign details','Opens from the Home banner. Campaigns come from the admin page (title, text, dates, audience, on or off). Nothing shows outside the dates.',dk('school','Home','<div class="pg"><div class="wrap">'+welcomeHead('Welcome, Govt College Ikeja!','Ready to practice today?')+''+quick([[0],[1],[2],[3]],true)+'</div></div>',campSheet()));
+out+=sec('S10. Downloads','A page of its own, in the navigation, for both school and student. Subjects on this device with a check (ready), a round download button, a round refresh button (update), or a progress bar while downloading. A trash button removes a subject to free space. No file sizes. Update all and Get all at the top.',dk('school','Downloads','<div class="pg"><div class="wrap" style="max-width:640px">'+downloads('school')+'</div></div>'));
+out+=sec('S11. Games, History, Settings','Games is the web page unchanged (one Concord card, "English: is or are? has or have?"). History: per computer. Settings: school, logo (stays on the device), sync, version. Subject downloads moved to the Downloads page.',dk('school','Games','<div class="pg"><div class="wrap" style="max-width:640px">'+gamesPage('school')+'</div></div>')+dk('school','History','<div class="pg"><div class="wrap" style="max-width:640px">'+sumPage()+'</div></div>')+dk('school','Settings','<div class="pg"><div class="wrap" style="max-width:640px">'+pageHead('Settings','&nbsp;')+'<div style="display:grid;gap:16px"><div class="gc rows"><div><b class="d" style="font-size:17px">School</b><span class="pill">'+ic('check')+'Registered</span></div><div><span>Name</span><b>Government College Ikeja</b></div><div><span>Phone</span><b>0803 123 4567</b></div><div><span>Location</span><b>Ikeja, Lagos</b></div><div><span>Device</span><b>GCI-001</b></div><div><span>School logo</span>'+offBtn('Choose image','image')+'</div></div><div class="gc rows"><div><span>Sync</span>'+ready()+'</div><div><span>App version</span><span>1.0.0 '+offBtn('Check for update','refresh-cw')+'</span></div></div></div></div></div>'));
+
+/* GROUP B: student mobile */
+out+=grp('Student mobile (Android)','Opens like the web app: landing, sign in, onboarding (reused unchanged). Bottom navigation on Home, Games, Leaderboard, Profile and Results. Hidden on setup screens and in sessions.');
+var sm='';
+sm+=mb('<div class="pg">'+'<div style="display:flex;flex-direction:column;gap:16px">'+welcomeHead('Welcome, Ada!','Ready to practice today?')+''+progressCard()+quick([[0],[1],[2],[3]],false)+modes(2,true)+camp()+'</div></div>','Practice');
+sm+=mbFocus('<div class="pg">'+subjSetup()+'</div>');
+sm+=mbFocus('<div class="pg">'+question()+'</div>');
+sm+=mb('<div class="pg">'+results('student')+'</div>','Practice');
+sm+=mb('<div class="pg">'+pageHead('Leaderboard','Top students by XP.')+'<div style="display:flex;gap:6px;margin-bottom:12px"><span class="chip on" style="height:40px">This week</span><span class="chip" style="height:40px">All time</span></div>'+lbRows(1)+'<p class="note" style="text-align:left">First name and last initial. Resets every Monday.</p></div>','Leaderboard');
+sm+=mb('<div class="pg">'+gamesPage('student')+'</div>','Games');
+sm+=mb('<div class="pg">'+profile()+'</div>','Profile');
+sm+=mb('<div class="pg">'+downloads('student')+'</div>','Downloads');
+out+=sec('M1 to M7. Home, setup, question, results, leaderboard, games, profile','Home follows the web page order on phones: progress card, Quick Five (four chosen subjects), modes, campaign banner at the bottom. The setup and question screens have no navigation. Results brings it back. Games locks levels after the first 5 on the free plan. Profile holds subjects, reminders, upgrade and sign out.',sm);
+
+/* GROUP C: student desktop */
+out+=grp('Student desktop (Windows app, student mode)','Same screens as school desktop with these differences: header shows streak and XP, Home has the level and target card and only the four chosen subjects, Practice is the hub itself, Leaderboard has weekly and all-time tabs and the student row, Games locks levels after 5 on the free plan, nav is Practice, Games, Leaderboard, Profile.');
+out+=sec('D1. Student home and leaderboard','Everything else (setup, mock, question, results) is the school screen with the student rules above.',dk('student','Practice','<div class="pg"><div class="wrap">'+welcomeHead('Welcome, Ada!','Ready to practice today?')+'<div class="two"><div style="display:flex;flex-direction:column;gap:16px">'+quick([[0],[1],[2],[3]],false)+modes(3,false)+'</div><div style="display:grid;gap:16px">'+progressCard()+'<div class="gc mode"><span class="ic" style="background:var(--gold-soft);color:var(--gold-ink)">'+ic('gamepad-2')+'</span><p>Games</p><small>Practise by playing</small></div></div></div><div style="margin-top:20px">'+camp()+'</div></div></div>')+dk('student','Leaderboard','<div class="pg"><div class="wrap" style="max-width:640px">'+pageHead('Leaderboard','Top students by XP.')+'<div style="display:flex;gap:6px;margin-bottom:12px"><span class="chip on" style="height:40px">This week</span><span class="chip" style="height:40px">All time</span></div>'+lbRows(1)+'<p class="note" style="text-align:left">First name and last initial. Resets every Monday.</p></div></div>'));
+
+out+='<h2 class="grp">Background</h2><p class="grpd">The pattern behind every page, in the design and as a file (docs/assets/learning-pattern.svg). Subject icons in their own colours at very low strength.</p><div class="patt"></div>';
+out=out.split('<span class="chip" style="height:40px">All time</span>').join('<span class="chip" style="height:40px">This month</span><span class="chip" style="height:40px">All time</span>');
+document.getElementById('out').innerHTML=out;lucide.createIcons();fit();
+}
+function fit(){var w=document.querySelector('.doc').clientWidth-40;var z=Math.min(1,w/1004);[].forEach.call(document.querySelectorAll('.dk'),function(e){e.style.zoom=z})}
+window.addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>

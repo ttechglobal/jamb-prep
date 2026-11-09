@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:push": "node --env-file=.env.local scripts/db-push.mjs",
     "db:test": "node --env-file=.env.local supabase/tests/engine.test.mjs",
+    "db:test:offline": "node --env-file=.env.local supabase/tests/offline.test.mjs",
     "db:check": "node --env-file=.env.local scripts/check-bank.mjs",
     "db:import": "node --disable-warning=ExperimentalWarning --env-file=.env.local scripts/import-questions.mjs",
     "reminders:setup": "node --env-file=.env.local scripts/setup-reminders.mjs"
