@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ChartNoAxesColumn, LayoutDashboard, LibraryBig, Menu, Settings, X } from "lucide-react";
+import { Bell, ChartNoAxesColumn, Download, LayoutDashboard, LibraryBig, Menu, Settings, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -16,6 +16,7 @@ const GROUPS = [
     items: [
       { href: "/admin/questions", label: "Coverage", icon: LibraryBig },
       { href: "/admin/questions/topics", label: "Topic frequency", icon: ChartNoAxesColumn },
+      { href: "/admin/questions/import", label: "Import", icon: Download },
     ],
   },
   {
