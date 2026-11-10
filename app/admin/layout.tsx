@@ -1,36 +1,26 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { LogOut } from "lucide-react";
 import { logout } from "@/app/admin/actions";
+import { AdminSidebar } from "@/components/admin/sidebar";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
-const NAV = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/notifications", label: "Notifications" },
-  { href: "/admin/settings", label: "Settings" },
-];
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const signOut = (
+    <form action={logout}>
+      <button type="submit" className="flex h-11 w-full items-center gap-3 rounded-xl px-3 font-display font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">
+        <LogOut className="size-5" aria-hidden />
+        Sign out
+      </button>
+    </form>
+  );
+
   return (
-    <div className="min-h-dvh">
-      <header className="border-b-2 bg-background">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-2 px-4 py-2">
-          <span className="mr-3 font-display text-lg font-semibold">JAMB Prep admin</span>
-          <nav aria-label="Admin" className="flex flex-wrap">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="inline-flex h-11 items-center rounded-xl px-3 font-display font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">
-                {n.label}
-              </Link>
-            ))}
-          </nav>
-          <form action={logout} className="ml-auto">
-            <button type="submit" className="inline-flex h-11 items-center rounded-xl px-3 text-sm font-semibold text-muted-foreground hover:bg-muted">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+    <div className="min-h-dvh lg:flex">
+      <AdminSidebar signOut={signOut} />
+      <main className="min-w-0 flex-1 px-4 py-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
     </div>
   );
 }
