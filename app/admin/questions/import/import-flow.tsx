@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { YearRow } from "@/lib/myquest/gaps";
+import { Batches } from "./batches";
 import { dryRunAction, fetchPaperAction, paperStatus, yearsForSubject } from "./actions";
 import { REASON_LABEL, type DryRunResult, type FetchResult, type PaperStatus } from "./types";
 
@@ -262,6 +263,8 @@ export function ImportFlow({ subjects }: { subjects: { id: string; name: string 
           <p className="text-sm text-muted-foreground">Shows what would be imported, what would be held back and why. It changes nothing. It appears here once a paper adds up.</p>
         </section>
       )}
+
+      {dry ? <Batches key={`${paper.subject}-${paper.year}`} paper={paper} /> : null}
     </div>
   );
 }
