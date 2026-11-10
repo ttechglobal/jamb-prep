@@ -4,34 +4,32 @@ import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { dryRunAction, fetchPaperAction, loadCatalogue, paperStatus } from "./actions";
-import { REASON_LABEL, type DryRunResult, type FetchResult, type Option, type PaperStatus } from "./types";
+import type { YearRow } from "@/lib/myquest/gaps";
+import { dryRunAction, fetchPaperAction, paperStatus, yearsForSubject } from "./actions";
+import { REASON_LABEL, type DryRunResult, type FetchResult, type PaperStatus } from "./types";
 
 const selectClass = "h-12 w-full rounded-xl border-2 bg-card px-3 text-base disabled:opacity-50";
 
-export function ImportFlow({ exams, loadError, mapped }: { exams: Option[]; loadError: string | null; mapped: string[] }) {
-  const [exam, setExam] = useState(exams.find((e) => e.value === "JAMB")?.value ?? "");
-  const [years, setYears] = useState<Option[]>([]);
+const EXAM = "JAMB";
+
+export function ImportFlow({ subjects }: { subjects: { id: string; name: string }[] }) {
+  const [subjectId, setSubjectId] = useState("");
+  const [provider, setProvider] = useState("");
+  const [rows, setRows] = useState<YearRow[]>([]);
+  const [showHeld, setShowHeld] = useState(false);
   const [year, setYear] = useState("");
-  const [subjects, setSubjects] = useState<Option[]>([]);
-  const [subject, setSubject] = useState("");
   const [status, setStatus] = useState<PaperStatus | null>(null);
   const [anyway, setAnyway] = useState(false);
   const [fetched, setFetched] = useState<FetchResult | null>(null);
   const [dry, setDry] = useState<DryRunResult | null>(null);
-  const [error, setError] = useState<string | null>(loadError);
+  const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
-  const [step, setStep] = useState<"idle" | "years" | "subjects" | "status" | "fetch" | "dry">("idle");
+  const [step, setStep] = useState<"idle" | "years" | "status" | "fetch" | "dry">("idle");
 
-  const reset = (from: "exam" | "year" | "subject") => {
-    if (from === "exam") {
-      setYears([]);
-      setYear("");
-    }
-    if (from !== "subject") {
-      setSubjects([]);
-      setSubject("");
-    }
+  const subjectName = subjects.find((x) => x.id === subjectId)?.name ?? "";
+
+  const clearPaper = () => {
+    setYear("");
     setStatus(null);
     setFetched(null);
     setDry(null);
@@ -47,50 +45,44 @@ export function ImportFlow({ exams, loadError, mapped }: { exams: Option[]; load
     });
   };
 
-  const pickExam = (value: string) => {
-    setExam(value);
-    reset("exam");
-    if (!value) return;
+  const pickSubject = (id: string) => {
+    setSubjectId(id);
+    setRows([]);
+    setProvider("");
+    clearPaper();
+    if (!id) return;
     run("years", async () => {
-      const r = await loadCatalogue("exam_year_id", { exam: value });
-      if (r.ok) setYears(r.options);
-      else setError(r.error);
+      const r = await yearsForSubject(id);
+      if (r.ok) {
+        setRows(r.rows);
+        setProvider(r.provider);
+      } else setError(r.error);
     });
   };
 
   const pickYear = (value: string) => {
+    clearPaper();
     setYear(value);
-    reset("year");
-    if (!value) return;
-    run("subjects", async () => {
-      const r = await loadCatalogue("subject", { exam, year: value });
-      if (r.ok) setSubjects(r.options);
-      else setError(r.error);
-    });
-  };
-
-  const pickSubject = (value: string) => {
-    setSubject(value);
-    reset("subject");
-    if (!value) return;
     run("status", async () => {
-      const r = await paperStatus({ exam, year, subject: value });
+      const r = await paperStatus({ exam: EXAM, year: value, subject: provider });
       if (r.ok) setStatus(r.status);
       else setError(r.error);
     });
   };
 
+  const paper = { exam: EXAM, year, subject: provider };
+
   const fetchIt = () =>
     run("fetch", async () => {
       setError(null);
       setDry(null);
-      const r = await fetchPaperAction({ exam, year, subject });
+      const r = await fetchPaperAction(paper);
       if (!r.ok) return setError(r.error);
       setFetched(r.result);
-      const s = await paperStatus({ exam, year, subject });
+      const s = await paperStatus(paper);
       if (s.ok) setStatus(s.status);
       if (r.result.complete) {
-        const d = await dryRunAction({ exam, year, subject });
+        const d = await dryRunAction(paper);
         if (d.ok) setDry(d.result);
         else setError(d.error);
       }
@@ -99,68 +91,121 @@ export function ImportFlow({ exams, loadError, mapped }: { exams: Option[]; load
   const checkIt = () =>
     run("dry", async () => {
       setError(null);
-      const d = await dryRunAction({ exam, year, subject });
+      const d = await dryRunAction(paper);
       if (d.ok) setDry(d.result);
       else setError(d.error);
     });
 
+  const gaps = rows.filter((r) => r.state === "gap");
+  const staged = rows.filter((r) => r.state === "staged");
+  const held = rows.filter((r) => r.state === "held");
+  const shown = showHeld ? rows : rows.filter((r) => r.state !== "held");
+
   const inBank = (status?.inBank ?? 0) > 0;
+  const notListed = status?.listed === false;
   const alreadyStored = status?.staged?.status === "complete";
-  const canFetch = !!status && status.subjectId !== null && (!inBank || anyway) && !busy;
+  const canFetch = !!status && status.subjectId !== null && !notListed && (!inBank || anyway) && !busy;
 
   return (
     <div className="space-y-5">
       {/* 1. Pick */}
       <section className="game-card space-y-4 p-4" aria-labelledby="pick-t">
-        <h2 id="pick-t" className="text-lg font-semibold">1. Pick a paper</h2>
-        <div className="grid gap-3 md:grid-cols-3">
+        <h2 id="pick-t" className="text-lg font-semibold">1. Pick a subject and year</h2>
+        <div className="grid gap-3 md:grid-cols-2">
           <Field label="Exam">
-            <select className={selectClass} value={exam} onChange={(e) => pickExam(e.target.value)} disabled={busy}>
-              <option value="">Choose</option>
-              {exams.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Year">
-            <select className={selectClass} value={year} onChange={(e) => pickYear(e.target.value)} disabled={busy || !years.length}>
-              <option value="">{step === "years" ? "Loading…" : "Choose"}</option>
-              {years.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+            <div className={`${selectClass} flex items-center font-semibold`}>{EXAM}</div>
           </Field>
           <Field label="Subject">
-            <select className={selectClass} value={subject} onChange={(e) => pickSubject(e.target.value)} disabled={busy || !subjects.length}>
-              <option value="">{step === "subjects" ? "Loading…" : "Choose"}</option>
+            <select className={selectClass} value={subjectId} onChange={(e) => pickSubject(e.target.value)} disabled={busy}>
+              <option value="">Choose a subject</option>
               {subjects.map((o) => (
-                <option key={o.value} value={o.value} disabled={!mapped.includes(o.value)}>
-                  {o.label}{mapped.includes(o.value) ? "" : " (not in our bank)"}
-                </option>
+                <option key={o.id} value={o.id}>{o.name}</option>
               ))}
             </select>
           </Field>
         </div>
-        {exam === "" ? <p className="text-sm text-muted-foreground">Years and subjects come straight from MyQuest, so what you see is what they list. Listing them costs nothing.</p> : null}
+
+        {step === "years" ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground" role="status">
+            <Loader2 className="size-4 animate-spin" aria-hidden /> Loading the years…
+          </p>
+        ) : null}
+
+        {rows.length ? (
+          <div className="space-y-3">
+            <p className="text-sm">
+              <span className="font-semibold">{subjectName}:</span> {gaps.length} year{gaps.length === 1 ? "" : "s"} with no questions
+              {staged.length ? `, ${staged.length} fetched but not in the bank` : ""}
+              {held.length ? `, ${held.length} already in the bank` : ""}.
+            </p>
+
+            {shown.length ? (
+              <ul className="flex flex-wrap gap-2" aria-label="Years">
+                {shown.map((r) => (
+                  <li key={r.year}>
+                    <button
+                      type="button"
+                      onClick={() => pickYear(r.year)}
+                      disabled={busy}
+                      aria-pressed={year === r.year}
+                      title={
+                        r.state === "held"
+                          ? `${r.inBank} questions already in the bank`
+                          : r.state === "staged"
+                            ? `${r.staged?.fetched ?? 0} fetched, not in the bank yet`
+                            : "No questions yet"
+                      }
+                      className={cn(
+                        "inline-flex h-11 min-w-16 items-center justify-center gap-1.5 rounded-xl border-2 px-3 font-semibold tabular-nums",
+                        r.state === "gap" && "bg-card hover:bg-muted",
+                        r.state === "staged" && "border-gold/60 bg-gold-soft text-gold-ink",
+                        r.state === "held" && "bg-muted text-muted-foreground",
+                        year === r.year && "border-primary ring-2 ring-primary/30",
+                      )}
+                    >
+                      {r.year}
+                      {r.state === "held" ? <span className="text-xs font-medium">{r.inBank}</span> : null}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">Every year MyQuest lists is already in the bank.</p>
+            )}
+
+            {held.length ? (
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" checked={showHeld} onChange={(e) => setShowHeld(e.target.checked)} className="size-5" />
+                Also show years we already hold (the number is how many questions)
+              </label>
+            ) : null}
+            <p className="text-xs text-muted-foreground">Gaps are listed from MyQuest&apos;s own years. Whether it has a paper for this subject in a given year is checked when you pick it.</p>
+          </div>
+        ) : null}
 
         {status ? (
           <div className="space-y-3 rounded-xl bg-muted p-3 text-sm" role="status">
-            {inBank ? (
+            {notListed ? (
+              <p className="flex items-start gap-2 font-medium text-destructive">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <span>MyQuest has no {subjectName} paper for {year}. Pick another year.</span>
+              </p>
+            ) : inBank ? (
               <p className="flex items-start gap-2 font-medium">
                 <AlertTriangle className="mt-0.5 size-4 shrink-0 text-gold-ink" aria-hidden />
                 <span>
-                  We already hold {status.inBank} {subject} questions for {year}. Fetching again costs money and may add duplicates.
+                  We already hold {status.inBank} {subjectName} questions for {year}. Fetching again costs money and may add duplicates.
                 </span>
               </p>
             ) : (
-              <p className="font-medium">Nothing in the bank for {subject} {year}.</p>
+              <p className="font-medium">Nothing in the bank for {subjectName} {year}.</p>
             )}
             {status.staged ? (
               <p>
                 Already fetched: {status.staged.pages} page{status.staged.pages === 1 ? "" : "s"}, {status.staged.fetched} questions ({status.staged.status}). Stored pages are reused, so fetching again only pays for pages that are missing.
               </p>
             ) : null}
-            {inBank ? (
+            {inBank && !notListed ? (
               <label className="flex items-center gap-2 font-medium">
                 <input type="checkbox" checked={anyway} onChange={(e) => setAnyway(e.target.checked)} className="size-5" />
                 Fetch it anyway

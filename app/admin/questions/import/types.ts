@@ -14,6 +14,8 @@ export interface PaperStatus {
   subjectId: string | null;
   inBank: number;
   staged: { status: string; fetched: number; pages: number } | null;
+  /** Whether MyQuest lists this subject for this year. null when the lookup failed. */
+  listed: boolean | null;
 }
 
 export interface FetchResult {

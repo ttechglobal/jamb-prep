@@ -2,8 +2,9 @@
 
 import { adminDb, isAdmin } from "@/lib/admin/auth";
 import { createClient, fetchCatalogue, fetchPaper, MyQuestError, paperKey, parsePage, type FetchedPage, type PaperRef } from "@/lib/myquest/client";
+import { yearRows, type StagedInfo, type YearRow } from "@/lib/myquest/gaps";
 import { normalisePaper } from "@/lib/myquest/normalise";
-import { MYQUEST_SUBJECTS } from "@/lib/myquest/subjects";
+import { MYQUEST_SUBJECTS, providerName } from "@/lib/myquest/subjects";
 import { describeIssue, type DryRunResult, type FetchResult, type Option, type Outcome, type PaperInput, type PaperStatus } from "./types";
 
 const ADAPTER = "mq-1";
@@ -67,7 +68,41 @@ export async function paperStatus(input: PaperInput): Promise<Outcome<{ status: 
     const { count } = await db.from("import_pages").select("page", { count: "exact", head: true }).eq("paper_id", data.id);
     staged = { status: data.status, fetched: data.fetched_total, pages: count ?? 0 };
   }
-  return { ok: true, status: { subjectId, inBank, staged } };
+  // Does MyQuest list this subject for this year? Unknown (null) if the lookup fails, which never blocks.
+  let listed: boolean | null = null;
+  try {
+    const { entries } = await fetchCatalogue(client(), "subject", { exam: ref.exam, exam_year_id: ref.exam_year_id });
+    listed = entries.some((e) => String(e.value) === ref.subject);
+  } catch {
+    listed = null;
+  }
+  return { ok: true, status: { subjectId, inBank, staged, listed } };
+}
+
+/**
+ * For one of our subjects: every JAMB year MyQuest lists, marked as held, fetched or a gap.
+ * Listing years costs nothing.
+ */
+export async function yearsForSubject(subjectId: string): Promise<Outcome<{ rows: YearRow[]; provider: string }>> {
+  if (!(await isAdmin())) return { ok: false, error: "Sign in again." };
+  const provider = providerName(subjectId);
+  if (!provider) return { ok: false, error: "MyQuest has no matching subject for this one." };
+  const db = adminDb();
+  try {
+    const [catalogue, coverage, papers] = await Promise.all([
+      fetchCatalogue(client(), "exam_year_id", { exam: "JAMB" }),
+      db.rpc("admin_question_coverage"),
+      db.from("import_papers").select("provider_year, status, fetched_total").eq("provider_exam", "JAMB").eq("provider_subject", provider),
+    ]);
+    const bank = new Map<number, number>();
+    for (const c of ((coverage.data as { cells?: { subject_id: string; year: number; published: number; draft: number }[] } | null)?.cells ?? [])) {
+      if (c.subject_id === subjectId) bank.set(c.year, c.published + c.draft);
+    }
+    const staged = new Map<string, StagedInfo>((papers.data ?? []).map((p) => [p.provider_year, { status: p.status, fetched: p.fetched_total }]));
+    return { ok: true, provider, rows: yearRows(catalogue.entries.map((e) => String(e.value)), bank, staged) };
+  } catch (e) {
+    return { ok: false, error: friendly(e) };
+  }
 }
 
 // Fetch -----------------------------------------------------------------------
