@@ -11,6 +11,10 @@
     "db:test": "node --env-file=.env.local supabase/tests/engine.test.mjs",
     "db:test:offline": "node --env-file=.env.local supabase/tests/offline.test.mjs",
     "db:check": "node --env-file=.env.local scripts/check-bank.mjs",
+    "mq:fetch": "node --disable-warning=ExperimentalWarning --env-file=.env.local scripts/myquest-fetch.mjs",
+    "mq:normalise": "node --disable-warning=ExperimentalWarning scripts/myquest-normalise.mjs",
+    "mq:media": "node --disable-warning=ExperimentalWarning --env-file=.env.local scripts/myquest-media.mjs",
+    "mq:test": "node --disable-warning=ExperimentalWarning --test tests/*.test.mjs",
     "db:import": "node --disable-warning=ExperimentalWarning --env-file=.env.local scripts/import-questions.mjs",
     "reminders:setup": "node --env-file=.env.local scripts/setup-reminders.mjs"
   },
