@@ -51,8 +51,8 @@ const KEYS: OptionKey[] = ["A", "B", "C", "D"];
 const GENERIC_WRONG = /^(this|that|it)?\s*(option|answer|choice)?\s*(is|was)?\s*(incorrect|wrong|not correct|false)\.?$/i;
 
 /** Reasons from the source side that still matter. The provider's own explanation no longer does. */
-const SOURCE_BLOCK = new Set(["duplicate_option_text", "missing_figure", "missing_table", "missing_extract", "unresolved_marked_text", "figure_without_alt", "uneven_table", "figure_needs_media"]);
-const SOURCE_WARN = new Set(["duplicate_in_paper"]);
+const SOURCE_BLOCK = new Set(["duplicate_option_text", "missing_figure", "missing_table", "missing_extract", "unresolved_marked_text", "figure_without_alt", "uneven_table"]);
+const SOURCE_WARN = new Set(["duplicate_in_paper", "figure_needs_media"]);
 
 const asString = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 const asStrings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.trim() !== "").map((x) => x.trim()) : []);

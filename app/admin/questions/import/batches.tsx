@@ -1,19 +1,29 @@
 "use client";
 
-import { AlertTriangle, Check, CheckCircle2, ClipboardCopy, ExternalLink, Loader2 } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, ClipboardCopy, ExternalLink, Loader2, Undo2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { Blocks } from "@/components/content/blocks";
 import { SolutionView } from "@/components/content/solution-view";
 import { Button } from "@/components/ui/button";
 import { FLAG_LABEL } from "@/lib/myquest/enrich/labels";
+import { blockingFlags } from "@/lib/myquest/enrich/publish";
 import { cn } from "@/lib/utils";
 import { checkReplyAction, loadBatches, type BatchView, type ReplyResult } from "./enrich-actions";
+import { publishBatchAction, undoPublishAction, type PublishResult } from "./publish-actions";
 import type { PaperInput } from "./types";
 
-/** Step 4: copy a prompt, paste it into an AI chat, paste the reply back, review what the app flags. */
+type Checked = ReplyResult["questions"][number];
+
+/** Step 4: copy a prompt, paste it into an AI chat, paste the reply back, review, publish. */
 export function Batches({ paper }: { paper: PaperInput }) {
   const [batches, setBatches] = useState<BatchView[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const reload = () =>
+    loadBatches(paper).then((r) => {
+      if (r.ok) setBatches(r.batches);
+      else setError(r.error);
+    });
 
   useEffect(() => {
     let live = true;
@@ -30,9 +40,9 @@ export function Batches({ paper }: { paper: PaperInput }) {
   return (
     <section className="game-card space-y-4 p-4" aria-labelledby="enrich-t">
       <div>
-        <h2 id="enrich-t" className="text-lg font-semibold">4. AI explanations</h2>
+        <h2 id="enrich-t" className="text-lg font-semibold">4. AI explanations and publishing</h2>
         <p className="text-sm text-muted-foreground">
-          For each batch: copy the prompt into an AI chat, paste its JSON reply here, and check what the app flags. Nothing is saved to the question bank from this page yet.
+          For each batch: copy the prompt into an AI chat, paste its JSON reply here, review what the app flags, then publish. Published questions go straight to students.
         </p>
       </div>
       {error ? (
@@ -44,7 +54,7 @@ export function Batches({ paper }: { paper: PaperInput }) {
       ) : (
         <div className="space-y-4">
           {batches.map((b) => (
-            <BatchCard key={b.no} paper={paper} batch={b} total={batches.length} />
+            <BatchCard key={b.no} paper={paper} batch={b} total={batches.length} onChanged={reload} />
           ))}
         </div>
       )}
@@ -52,11 +62,14 @@ export function Batches({ paper }: { paper: PaperInput }) {
   );
 }
 
-function BatchCard({ paper, batch, total }: { paper: PaperInput; batch: BatchView; total: number }) {
+function BatchCard({ paper, batch, total, onChanged }: { paper: PaperInput; batch: BatchView; total: number; onChanged: () => void }) {
   const [reply, setReply] = useState(batch.saved?.reply ?? "");
   const [model, setModel] = useState(batch.saved?.model ?? "");
   const [copied, setCopied] = useState(false);
   const [result, setResult] = useState<ReplyResult | null>(null);
+  const [accepted, setAccepted] = useState<Set<string>>(new Set());
+  const [confirming, setConfirming] = useState(false);
+  const [published, setPublished] = useState<PublishResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
 
@@ -66,19 +79,55 @@ function BatchCard({ paper, batch, total }: { paper: PaperInput; batch: BatchVie
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      setError("Couldn't copy. Select the prompt text below and copy it by hand.");
+      setError("Couldn't copy. Open the prompt below and copy it by hand.");
     }
+  };
+
+  const refresh = async () => {
+    const r = await checkReplyAction(paper, batch.no, reply, model);
+    if (r.ok) setResult(r.result);
+    else setError(r.error);
   };
 
   const check = () =>
     start(async () => {
       setError(null);
-      const r = await checkReplyAction(paper, batch.no, reply, model);
-      if (r.ok) setResult(r.result);
-      else setError(r.error);
+      setPublished(null);
+      setConfirming(false);
+      setAccepted(new Set());
+      await refresh();
     });
 
-  const ok = result?.questions.filter((q) => q.publishable).length ?? 0;
+  const ready = result?.questions.filter((q) => blockingFlags(q, accepted).length === 0) ?? [];
+
+  const publish = () =>
+    start(async () => {
+      setError(null);
+      setConfirming(false);
+      const r = await publishBatchAction(paper, batch.no, [...accepted]);
+      if (!r.ok) return setError(r.error);
+      setPublished(r.result);
+      await refresh();
+      onChanged();
+    });
+
+  const undo = (id: string) =>
+    start(async () => {
+      setError(null);
+      const r = await undoPublishAction(id);
+      if (!r.ok) return setError(r.error);
+      setPublished(null);
+      await refresh();
+      onChanged();
+    });
+
+  const toggleAccept = (id: string) =>
+    setAccepted((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
   return (
     <article className="rounded-2xl border-2 p-4" aria-label={`Batch ${batch.no}`}>
@@ -86,12 +135,26 @@ function BatchCard({ paper, batch, total }: { paper: PaperInput; batch: BatchVie
         <h3 className="font-semibold">
           Batch {batch.no} of {total}
           <span className="ml-2 font-normal text-muted-foreground">{batch.count} questions</span>
+          {batch.published.count ? <span className="ml-2 rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold">{batch.published.count} published</span> : null}
         </h3>
         <Button onClick={copy} size="sm" variant="outline" className="ml-auto">
           {copied ? <Check className="size-4" aria-hidden /> : <ClipboardCopy className="size-4" aria-hidden />}
           {copied ? "Copied" : "Copy prompt"}
         </Button>
       </div>
+
+      {batch.published.batches.length ? (
+        <ul className="mt-2 space-y-1 text-sm">
+          {batch.published.batches.map((p) => (
+            <li key={p.id} className="flex flex-wrap items-center gap-2">
+              <span>{p.count} question{p.count === 1 ? "" : "s"} published to students.</span>
+              <Button size="sm" variant="outline" disabled={busy} onClick={() => undo(p.id)}>
+                <Undo2 className="size-4" aria-hidden /> Undo
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       {batch.figures.length ? (
         <div className="mt-3 rounded-xl bg-gold-soft p-3 text-sm text-gold-ink">
@@ -105,7 +168,7 @@ function BatchCard({ paper, batch, total }: { paper: PaperInput; batch: BatchVie
               </li>
             ))}
           </ul>
-          <p className="mt-1 text-xs">Open each, save the image, and attach it before sending the prompt.</p>
+          <p className="mt-1 text-xs">Open each, save the image, and attach it before sending the prompt. The diagram is saved with the question when you publish.</p>
         </div>
       ) : null}
 
@@ -133,7 +196,7 @@ function BatchCard({ paper, batch, total }: { paper: PaperInput; batch: BatchVie
             <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="for example Claude Sonnet" className="mt-1 block h-10 w-64 max-w-full rounded-xl border-2 bg-card px-3 text-sm" />
           </label>
           <Button onClick={check} disabled={busy || !reply.trim()}>
-            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+            {busy && !confirming ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
             Check the reply
           </Button>
         </div>
@@ -144,16 +207,51 @@ function BatchCard({ paper, batch, total }: { paper: PaperInput; batch: BatchVie
         <p role="alert" className="mt-3 rounded-xl bg-destructive/10 p-3 text-sm font-medium text-destructive">{error}</p>
       ) : null}
 
+      {published ? (
+        <div className="mt-3 rounded-xl bg-primary/10 p-3 text-sm" role="status">
+          <p className="flex items-center gap-2 font-semibold">
+            <CheckCircle2 className="size-4" aria-hidden />
+            {published.published} question{published.published === 1 ? "" : "s"} published to students.
+          </p>
+          {published.notPublished.length ? (
+            <ul className="mt-1 list-disc pl-6">
+              {published.notPublished.map((n, i) => (
+                <li key={i}>Question {n.position || "?"} was not published: {n.reason}.</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
       {result ? (
         <div className="mt-4 space-y-3">
           {result.error ? (
             <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm font-medium text-destructive">{result.error}</p>
           ) : (
             <>
-              <p className={cn("flex items-center gap-2 rounded-xl p-3 text-sm font-semibold", ok === result.questions.length ? "bg-primary/10" : "bg-gold-soft text-gold-ink")} role="status">
-                {ok === result.questions.length ? <CheckCircle2 className="size-4" aria-hidden /> : <AlertTriangle className="size-4" aria-hidden />}
-                {ok} of {result.questions.length} questions have no blocking problems.
-              </p>
+              <div className={cn("flex flex-wrap items-center gap-3 rounded-xl p-3 text-sm", ready.length === result.questions.length ? "bg-primary/10" : "bg-gold-soft text-gold-ink")} role="status">
+                <p className="flex items-center gap-2 font-semibold">
+                  {ready.length === result.questions.length ? <CheckCircle2 className="size-4" aria-hidden /> : <AlertTriangle className="size-4" aria-hidden />}
+                  {ready.length} of {result.questions.length} are ready to publish.
+                </p>
+                {ready.length && !confirming ? (
+                  <Button size="sm" className="ml-auto" disabled={busy} onClick={() => setConfirming(true)}>
+                    Publish {ready.length} to students
+                  </Button>
+                ) : null}
+                {confirming ? (
+                  <span className="ml-auto flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">Students will see {ready.length} new question{ready.length === 1 ? "" : "s"} straight away.</span>
+                    <Button size="sm" disabled={busy} onClick={publish}>
+                      {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+                      Yes, publish
+                    </Button>
+                    <Button size="sm" variant="outline" disabled={busy} onClick={() => setConfirming(false)}>
+                      Cancel
+                    </Button>
+                  </span>
+                ) : null}
+              </div>
               {result.warnings.length ? (
                 <ul className="list-disc rounded-xl bg-muted p-3 pl-7 text-sm">
                   {result.warnings.map((w) => (
@@ -164,7 +262,7 @@ function BatchCard({ paper, batch, total }: { paper: PaperInput; batch: BatchVie
               {result.unknownIds.length ? <p className="text-sm text-destructive">The reply has ids that are not in this batch: {result.unknownIds.join(", ")}.</p> : null}
               <ul className="space-y-2">
                 {result.questions.map((q) => (
-                  <QuestionPreview key={q.id} q={q} />
+                  <QuestionPreview key={q.id} q={q} accepted={accepted.has(q.id)} onAccept={() => toggleAccept(q.id)} />
                 ))}
               </ul>
             </>
@@ -175,19 +273,25 @@ function BatchCard({ paper, batch, total }: { paper: PaperInput; batch: BatchVie
   );
 }
 
-function QuestionPreview({ q }: { q: ReplyResult["questions"][number] }) {
-  const blocking = q.flags.filter((f) => f.severity === "block");
+function plain(blocks: Checked["stem"]): string {
+  return blocks.map((b) => ("content" in b ? b.content.map((c) => ("text" in c ? c.text : c.math)).join("") : "")).join(" ");
+}
+
+function QuestionPreview({ q, accepted, onAccept }: { q: Checked; accepted: boolean; onAccept: () => void }) {
+  const standing = blockingFlags(q, accepted ? new Set([q.id]) : new Set());
   const warnings = q.flags.filter((f) => f.severity === "warn");
+  const disputed = q.flags.some((f) => f.code === "key_disputed");
   const shownKey = q.aiKey ?? q.providerKey;
+  const stem = q.figure ? [{ type: "figure" as const, src: q.figure.url, alt: q.figureAlt || "Source diagram" }, ...q.stem] : q.stem;
 
   return (
     <li>
-      <details open={blocking.length > 0} className="rounded-xl border-2">
+      <details open={standing.length > 0} className="rounded-xl border-2">
         <summary className="flex cursor-pointer flex-wrap items-center gap-2 p-3">
           <span className="font-semibold">Question {q.position}</span>
           <span className="text-xs text-muted-foreground">MyQuest #{q.providerId}</span>
-          <span className={cn("ml-auto rounded-full px-2.5 py-0.5 text-xs font-semibold", q.publishable ? "bg-primary/15" : "bg-destructive/15 text-destructive")}>
-            {q.publishable ? (warnings.length ? `OK, ${warnings.length} to look at` : "OK") : `${blocking.length} problem${blocking.length === 1 ? "" : "s"}`}
+          <span className={cn("ml-auto rounded-full px-2.5 py-0.5 text-xs font-semibold", standing.length === 0 ? "bg-primary/15" : "bg-destructive/15 text-destructive")}>
+            {standing.length === 0 ? (warnings.length ? `OK, ${warnings.length} to look at` : "OK") : `${standing.length} problem${standing.length === 1 ? "" : "s"}`}
           </span>
         </summary>
 
@@ -195,7 +299,7 @@ function QuestionPreview({ q }: { q: ReplyResult["questions"][number] }) {
           {q.flags.length ? (
             <ul className="space-y-1 text-sm">
               {q.flags.map((f, i) => (
-                <li key={`${f.code}-${i}`} className={cn("flex items-start gap-2 rounded-lg px-2.5 py-1.5", f.severity === "block" ? "bg-destructive/10 text-destructive" : "bg-gold-soft text-gold-ink")}>
+                <li key={`${f.code}-${i}`} className={cn("flex items-start gap-2 rounded-lg px-2.5 py-1.5", f.severity === "block" && !(accepted && f.code === "key_disputed") ? "bg-destructive/10 text-destructive" : "bg-gold-soft text-gold-ink")}>
                   <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
                   <span>
                     <span className="font-semibold">{FLAG_LABEL[f.code] ?? f.code}.</span>
@@ -206,8 +310,15 @@ function QuestionPreview({ q }: { q: ReplyResult["questions"][number] }) {
             </ul>
           ) : null}
 
+          {disputed && q.aiKey ? (
+            <label className="flex items-start gap-2 rounded-xl bg-muted p-3 text-sm font-medium">
+              <input type="checkbox" checked={accepted} onChange={onAccept} className="mt-0.5 size-5" />
+              <span>Use the AI&apos;s answer ({q.aiKey}). I have checked it and MyQuest&apos;s answer ({q.providerKey ?? "none"}) is wrong. The explanation was written for the AI&apos;s answer, so this is the only way to keep it.</span>
+            </label>
+          ) : null}
+
           <div className="rounded-xl bg-muted/60 p-3">
-            <Blocks blocks={q.stem} />
+            <Blocks blocks={stem} />
             {q.figure ? (
               <p className="mt-2 text-sm">
                 Diagram {q.figure.label}: {q.figureAlt ? <span>{q.figureAlt}</span> : <span className="text-destructive">no description yet</span>}
@@ -241,7 +352,7 @@ function QuestionPreview({ q }: { q: ReplyResult["questions"][number] }) {
             <div className="rounded-xl border-2 border-dashed p-3">
               <p className="text-sm font-semibold">
                 The correct answer is {q.aiKey}
-                {q.aiKey ? ` — ${q.options.find((o) => o.key === q.aiKey)?.blocks.map((b) => ("content" in b ? b.content.map((c) => ("text" in c ? c.text : c.math)).join("") : "")).join(" ")}` : ""}
+                {q.aiKey ? ` — ${plain(q.options.find((o) => o.key === q.aiKey)?.blocks ?? [])}` : ""}
               </p>
               <SolutionView solution={q.solution} selected={null} />
               {q.hint.length ? (

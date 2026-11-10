@@ -319,3 +319,49 @@ test("a reply that answers one question twice is blocked", () => {
   const q = checkBatch("physics", batch, [good(batch[0].id), good(batch[0].id)], topics).questions[0];
   assert.ok(codes(q).includes("duplicate_reply"));
 });
+
+// Publish ---------------------------------------------------------------------
+
+import { buildRow, selectForPublish } from "../lib/myquest/enrich/publish.ts";
+
+test("only questions with no blocking flag go live, and published ones are never offered twice", () => {
+  const batch = setup(4);
+  const { questions } = checkBatch(
+    "physics",
+    batch,
+    [good(batch[0].id), good(batch[1].id, { topic: "P09" }), { id: batch[2].id, status: "missing_context", issues: ["no diagram"] }, good(batch[3].id)],
+    topics,
+  );
+  const live = new Set([questions[3].sourceRef]);
+  const { include, excluded } = selectForPublish(questions, new Set(), live);
+  assert.deepEqual(include.map((q) => q.position), [1]);
+  assert.deepEqual(excluded.map((e) => [e.position, e.reason]), [[2, "blocked"], [3, "blocked"], [4, "already_published"]]);
+});
+
+test("a disputed answer can go live only when the reviewer accepts the AI's answer, and nothing else can be overridden", () => {
+  const batch = setup(2);
+  const wrong = { A: "x".repeat(20), C: "y".repeat(20), D: "z".repeat(20) };
+  const disputed = (id, over = {}) => good(id, { answer: "A", wrong: { B: "x".repeat(20), C: "y".repeat(20), D: "z".repeat(20) }, ...over });
+  const { questions } = checkBatch("physics", batch, [disputed(batch[0].id), disputed(batch[1].id, { topic: "P09" })], topics);
+  assert.ok(questions[0].flags.some((f) => f.code === "key_disputed"));
+  const all = new Set(questions.map((q) => q.id));
+  const none = selectForPublish(questions, new Set(), new Set());
+  assert.equal(none.include.length, 0);
+  const accepted = selectForPublish(questions, all, new Set());
+  assert.deepEqual(accepted.include.map((q) => q.position), [1]); // question 2 also has a bad topic, which cannot be overridden
+  assert.ok(wrong);
+});
+
+test("a published row carries the AI key, the stem with its saved diagram first, and the audit trail", () => {
+  const batch = setup(1, { image: "https://x.test/i.jpg", question: "Study the diagram. What is shown?" });
+  const { questions } = checkBatch("physics", batch, [good(batch[0].id, { figure_alt: "A concave mirror with an object at 24 cm." })], topics);
+  const row = buildRow(questions[0], { subjectId: "physics", year: 2005, raw: { id: 1 }, figureSrc: "myquest/p/abc.jpg", model: "Claude", promptVersion: "p1", overridden: false });
+  assert.equal(row.correct_option, "B");
+  assert.equal(row.stem[0].type, "figure");
+  assert.equal(row.stem[0].src, "myquest/p/abc.jpg");
+  assert.equal(row.stem[0].alt, "A concave mirror with an object at 24 cm.");
+  assert.equal(row.topic_id, "t-motion");
+  assert.equal(row.year, 2005);
+  assert.equal(row.normalised.model, "Claude");
+  assert.ok(row.source_ref.startsWith("mq:JAMB:2005:Physics:"));
+});
