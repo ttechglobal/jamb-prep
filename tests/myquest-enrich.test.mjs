@@ -142,7 +142,7 @@ test("a paper splits into batches of ten, rejected rows are left out and figures
   const rows = Array.from({ length: 24 }, (_, i) => row(i + 1, i === 3 || i === 12 ? { image: "https://x.test/i.jpg", question: `Study the diagram. Question ${i + 1}?` } : {}));
   rows.push(row(99, { correct_answer: "" })); // rejected: no key
   const { questions } = normalisePaper(REF, rows);
-  const batches = makeBatches(questions);
+  const batches = makeBatches(questions, 10);
   assert.deepEqual(batches.map((b) => b.length), [10, 10, 4]);
   assert.deepEqual(batches[0].filter((b) => b.figure).map((b) => b.figure), ["F1"]);
   assert.deepEqual(batches[1].filter((b) => b.figure).map((b) => b.figure), ["F1"]);
@@ -364,4 +364,30 @@ test("a published row carries the AI key, the stem with its saved diagram first,
   assert.equal(row.year, 2005);
   assert.equal(row.normalised.model, "Claude");
   assert.ok(row.source_ref.startsWith("mq:JAMB:2005:Physics:"));
+});
+
+test("by default a paper is one prompt, with figures numbered across the whole paper", () => {
+  const rows = Array.from({ length: 40 }, (_, i) => row(i + 1, i % 8 === 0 ? { image: "https://x.test/i.jpg", question: `Study the diagram. Question ${i + 1}?` } : {}));
+  const { questions } = normalisePaper(REF, rows);
+  const batches = makeBatches(questions);
+  assert.equal(batches.length, 1);
+  assert.equal(batches[0].length, 40);
+  assert.deepEqual(batches[0].filter((b) => b.figure).map((b) => b.figure), ["F1", "F2", "F3", "F4", "F5"]);
+  const p = buildPrompt({ subjectId: "physics", subjectName: "Physics", batchNo: 1, batches: 1, topics, batch: batches[0] });
+  assert.ok(p.includes("Subject: Physics. 40 questions."));
+  assert.ok(!p.includes("Part 1 of"));
+});
+
+test("a long reply sent in two parts is joined in order", () => {
+  const fence = "```";
+  const text = ["Part one:", fence + "json", '[{"id":"q1-aaaa"},{"id":"q2-bbbb"}]', fence, "Part two:", fence + "json", '[{"id":"q3-cccc"}]', fence].join("\n");
+  const r = parseReply(text);
+  assert.deepEqual(r.items.map((i) => i.id), ["q1-aaaa", "q2-bbbb", "q3-cccc"]);
+  assert.ok(r.warnings.some((w) => /2 parts/.test(w)));
+});
+
+test("a second part that is itself cut off keeps the complete questions from both", () => {
+  const r = parseReply(['[{"id":"q1-aaaa"}]', '[{"id":"q2-bbbb"},{"id":"q3-cccc","why":"cut o'].join("\n"));
+  assert.deepEqual(r.items.map((i) => i.id), ["q1-aaaa", "q2-bbbb"]);
+  assert.equal(r.truncated, true);
 });

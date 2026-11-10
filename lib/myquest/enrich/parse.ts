@@ -99,14 +99,13 @@ export function repairJsonText(src: string): Repair {
   return { text: out, fixedBackslashes, fixedControls, droppedCommas };
 }
 
-/** Complete objects of the top-level array, even when the array was never closed. */
-function recoverObjects(s: string, arrayStart: number): { objects: string[]; closed: boolean } {
+/** Complete objects of one array starting at `start`, even when the array was never closed. */
+function scanArray(s: string, start: number): { objects: string[]; end: number; closed: boolean } {
   const objects: string[] = [];
   let depth = 0;
   let inString = false;
   let objStart = -1;
-  let closed = false;
-  for (let i = arrayStart; i < s.length; i++) {
+  for (let i = start; i < s.length; i++) {
     const c = s[i];
     if (inString) {
       if (c === "\\") i++;
@@ -126,13 +125,32 @@ function recoverObjects(s: string, arrayStart: number): { objects: string[]; clo
       }
     } else if (c === "]") {
       depth--;
-      if (depth === 0) {
-        closed = true;
-        break;
-      }
+      if (depth === 0) return { objects, end: i, closed: true };
     }
   }
-  return { objects, closed };
+  return { objects, end: s.length, closed: false };
+}
+
+/**
+ * Every complete object in every top-level array. A long reply is often sent in two parts, each its
+ * own array, so the parts are joined in the order they were pasted.
+ */
+function recoverObjects(s: string, firstArray: number): { objects: string[]; closed: boolean; parts: number } {
+  const objects: string[] = [];
+  let from = firstArray;
+  let parts = 0;
+  let closed = true;
+  while (from >= 0) {
+    const part = scanArray(s, from);
+    objects.push(...part.objects);
+    parts++;
+    if (!part.closed) {
+      closed = false;
+      break;
+    }
+    from = s.indexOf("[", part.end + 1);
+  }
+  return { objects, closed, parts };
 }
 
 export function parseReply(raw: string): ParseResult {
@@ -140,10 +158,12 @@ export function parseReply(raw: string): ParseResult {
   let text = raw.replace(/^﻿/, "").trim();
   if (!text) return { items: [], warnings, truncated: false, error: "Nothing was pasted." };
 
-  const fenced = /```[a-zA-Z]*\s*\n?([\s\S]*?)(```|$)/.exec(text);
-  if (fenced && fenced[1].trim()) {
-    if (fenced.index > 0 || (fenced[2] === "```" && text.length > fenced.index + fenced[0].length)) warnings.push("Text outside the code block was ignored.");
-    text = fenced[1].trim();
+  // Every code block counts, in the order pasted, so a reply sent in two parts is not cut short.
+  const fence = /```[a-zA-Z]*\s*\n?([\s\S]*?)(```|$)/g;
+  const blocks = [...text.matchAll(fence)].map((m) => m[1].trim()).filter(Boolean);
+  if (blocks.length) {
+    if (text.replace(fence, "").trim()) warnings.push("Text outside the code block was ignored.");
+    text = blocks.join("\n");
   }
 
   const start = text.search(/[\[{]/);
@@ -179,7 +199,8 @@ export function parseReply(raw: string): ParseResult {
   // A reply cut off, or with one broken item: keep every complete object.
   const arrayStart = rep.text.startsWith("[") ? 0 : rep.text.search(/"items"\s*:\s*\[/) >= 0 ? rep.text.indexOf("[", rep.text.search(/"items"\s*:\s*\[/)) : -1;
   if (arrayStart >= 0) {
-    const { objects, closed } = recoverObjects(rep.text, arrayStart);
+    const { objects, closed, parts } = recoverObjects(rep.text, arrayStart);
+    if (parts > 1) warnings.push(`The reply was in ${parts} parts and they were joined.`);
     const items: RawItem[] = [];
     let bad = 0;
     for (const o of objects) {

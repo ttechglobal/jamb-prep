@@ -8,7 +8,8 @@ import type { NormalisedQuestion } from "../normalise.ts";
 import { MODULE_FOR_SUBJECT, MODULE_TEXT } from "./modules.ts";
 
 export const PROMPT_VERSION = "p1";
-export const BATCH_SIZE = 10;
+/** One prompt for the whole paper. Pass a smaller size to split it. */
+export const BATCH_SIZE = 1000;
 
 export interface TopicEntry {
   code: string;
@@ -52,6 +53,8 @@ export function makeBatches(questions: NormalisedQuestion[], size = BATCH_SIZE):
 
 const REPLY_SPEC = String.raw`Reply with ONE JSON array inside ONE code block, so it copies cleanly. Nothing outside the block.
 One object per question, in any order. Every id must appear exactly once.
+If you run out of room, stop after a complete question. When I say "continue", reply in a NEW code block
+with only the questions you have not answered yet.
 
 For a solved question:
 {
@@ -130,7 +133,7 @@ export function buildPrompt(input: PromptInput): string {
   const moduleKey = MODULE_FOR_SUBJECT[input.subjectId] ?? "recall";
   const figures = input.batch.filter((b) => b.figure);
   return `You are an expert Nigerian JAMB UTME teacher writing for 15 to 18 year old students.
-Subject: ${input.subjectName}. Batch ${input.batchNo} of ${input.batches}, ${input.batch.length} questions.
+Subject: ${input.subjectName}. ${input.batches > 1 ? `Part ${input.batchNo} of ${input.batches}, ` : ""}${input.batch.length} questions.
 
 Solve every question yourself. No answer key is given. Use only what is supplied.
 

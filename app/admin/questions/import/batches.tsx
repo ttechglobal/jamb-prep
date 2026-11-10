@@ -42,7 +42,7 @@ export function Batches({ paper }: { paper: PaperInput }) {
       <div>
         <h2 id="enrich-t" className="text-lg font-semibold">4. AI explanations and publishing</h2>
         <p className="text-sm text-muted-foreground">
-          For each batch: copy the prompt into an AI chat, paste its JSON reply here, review what the app flags, then publish. Published questions go straight to students.
+          Copy the prompt into an AI chat, paste its JSON reply here, review what the app flags, then publish. Published questions go straight to students.
         </p>
       </div>
       {error ? (
@@ -133,7 +133,7 @@ function BatchCard({ paper, batch, total, onChanged }: { paper: PaperInput; batc
     <article className="rounded-2xl border-2 p-4" aria-label={`Batch ${batch.no}`}>
       <div className="flex flex-wrap items-center gap-3">
         <h3 className="font-semibold">
-          Batch {batch.no} of {total}
+          {total === 1 ? "The whole paper" : `Part ${batch.no} of ${total}`}
           <span className="ml-2 font-normal text-muted-foreground">{batch.count} questions</span>
           {batch.published.count ? <span className="ml-2 rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-semibold">{batch.published.count} published</span> : null}
         </h3>
@@ -181,6 +181,7 @@ function BatchCard({ paper, batch, total, onChanged }: { paper: PaperInput; batc
         <label className="block text-sm font-semibold" htmlFor={`reply-${batch.no}`}>
           Paste the AI&apos;s reply
         </label>
+        <p className="text-xs text-muted-foreground">If the AI stops part way, tell it to continue, then paste both parts here one after the other. They are joined for you.</p>
         <textarea
           id={`reply-${batch.no}`}
           value={reply}

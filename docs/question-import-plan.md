@@ -26,7 +26,7 @@ The full design of that AI step (prompt, reply format, parser, checks, build ord
 1. **MyQuest and our bank are largely the same material.** For JAMB Physics 2025, 35 of the 40 MyQuest questions already exist word for word in the bank (the bank holds 38 for that paper). The five that are missing are exactly the five with a diagram, which the old importer could not take. So fetching a year we already hold mostly pays ₦10 to be told "duplicate".
 2. **The bank cannot recognise its own rows by source.** Existing `source_ref` values are random UUIDs from the old app, not MyQuest ids. The only link between an old row and a MyQuest row is the question text (`content_hash`).
 3. **Our subject list is thin and uneven.** 12 subjects, Geography hidden. Topics exist for 9. Commerce and Mathematics have none. English and Literature have 3 topics each (too coarse for frequency analysis).
-4. **MyQuest lists 16 JAMB subjects for 2025.** 11 map to ours. Five do not: Fine Art, Yoruba, Computer Studies, Arabic Studies, The Lekki Headmaster (a literature set text, which belongs under Literature with a work record, not as its own subject).
+4. **MyQuest lists 16 JAMB subjects for 2025.** 11 map to ours. Five do not: Fine Art, Yoruba, Computer Studies, Arabic Studies, The Lekki Headmaster (the JAMB prescribed novel. Per our own offline plan, Use of English carries up to 10 questions from the set text, so it belongs under **English** with a work record, not as its own subject and not under Literature. MyQuest lists it for 2024 and 2025 only).
 5. **The bank is JAMB only.** `questions` has no exam column. MyQuest also lists WAEC, NECO, POST-UTME, GCE and GST.
 6. **MyQuest gives no topics.** Everything topic-related is ours to do.
 7. **The Physics paper's quality signals are weak.** No D answers in 40, generic wording. Both sources share this, so it is a property of the material, not of the importer.
@@ -47,7 +47,7 @@ The full design of that AI step (prompt, reply format, parser, checks, build ord
 - Keep `subjects` as the master list. Add a state per subject: `live` (students see it), `building` (we are filling it), `planned`. This replaces the single `active` flag. Geography becomes `planned`.
 - New table `provider_subjects`: `provider`, `exam`, `provider_name`, `subject_id` (nullable), `treatment` (`map`, `ignore`, `set_text`), `note`. Unique on provider, exam, name. Seeded from the 16 JAMB names:
   - 11 `map` rows (what is hardcoded today).
-  - The Lekki Headmaster is `set_text`: it maps to Literature and carries a `prescribed_works` record, so those questions get a `work_id` and a book reference.
+  - The Lekki Headmaster is `set_text`: it maps to **English** and carries a `prescribed_works` record plus a `work_assignments` row for the Use of English paper, so those questions get a `work_id` and a book reference. The English mock draws up to 10 of them.
   - Yoruba, Computer Studies, Arabic Studies, Fine Art are `ignore` until you decide to add them.
 - A name MyQuest returns that is not in this table shows on the import page as **needs a decision**, never silently ignored or guessed.
 - New admin page **Subjects**: list with state, question count, topic count, years held, and its MyQuest names. Add or hide a subject, edit the mapping.

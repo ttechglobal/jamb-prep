@@ -19,7 +19,7 @@ export interface PublishResult {
 
 const REASON: Record<string, string> = {
   already_published: "already published from this paper",
-  already_in_bank: "the same question is already in the bank",
+  already_in_bank: "this exact question is already in the bank for this year",
   figure_failed: "its diagram could not be saved",
 };
 
