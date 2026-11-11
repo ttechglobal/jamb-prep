@@ -16,6 +16,7 @@
     "mq:media": "node --disable-warning=ExperimentalWarning --env-file=.env.local scripts/myquest-media.mjs",
     "mq:test": "node --disable-warning=ExperimentalWarning --test tests/*.test.mjs",
     "db:import": "node --disable-warning=ExperimentalWarning --env-file=.env.local scripts/import-questions.mjs",
+    "admin:password": "node --env-file=.env.local scripts/set-admin-password.mjs",
     "reminders:setup": "node --env-file=.env.local scripts/setup-reminders.mjs"
   },
   "dependencies": {

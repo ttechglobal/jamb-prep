@@ -15,7 +15,7 @@ import type { PaperInput } from "./types";
 type Checked = ReplyResult["questions"][number];
 
 /** Step 4: copy a prompt, paste it into an AI chat, paste the reply back, review, publish. */
-export function Batches({ paper }: { paper: PaperInput }) {
+export function Batches({ paper, onLive }: { paper: PaperInput; onLive?: (published: number | null) => void }) {
   const [batches, setBatches] = useState<BatchView[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +54,7 @@ export function Batches({ paper }: { paper: PaperInput }) {
       ) : (
         <div className="space-y-4">
           {batches.map((b) => (
-            <BatchCard key={b.no} paper={paper} batch={b} total={batches.length} onChanged={reload} />
+            <BatchCard key={b.no} paper={paper} batch={b} total={batches.length} onChanged={reload} onLive={onLive} />
           ))}
         </div>
       )}
@@ -62,7 +62,7 @@ export function Batches({ paper }: { paper: PaperInput }) {
   );
 }
 
-function BatchCard({ paper, batch, total, onChanged }: { paper: PaperInput; batch: BatchView; total: number; onChanged: () => void }) {
+function BatchCard({ paper, batch, total, onChanged, onLive }: { paper: PaperInput; batch: BatchView; total: number; onChanged: () => void; onLive?: (published: number | null) => void }) {
   const [reply, setReply] = useState(batch.saved?.reply ?? "");
   const [model, setModel] = useState(batch.saved?.model ?? "");
   const [copied, setCopied] = useState(false);
@@ -109,6 +109,7 @@ function BatchCard({ paper, batch, total, onChanged }: { paper: PaperInput; batc
       setPublished(r.result);
       await refresh();
       onChanged();
+      onLive?.(r.result.published);
     });
 
   const undo = (id: string) =>
@@ -119,6 +120,7 @@ function BatchCard({ paper, batch, total, onChanged }: { paper: PaperInput; batc
       setPublished(null);
       await refresh();
       onChanged();
+      onLive?.(null);
     });
 
   const toggleAccept = (id: string) =>

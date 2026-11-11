@@ -9,7 +9,7 @@ export default function AdminSettingsPage() {
         <section className="game-card mt-4 p-4">
           <h2 className="mb-3 text-lg font-semibold">Admin password</h2>
           <PasswordForm />
-          <p className="mt-3 text-xs text-muted-foreground">Changing it signs out every browser that is signed in.</p>
+          <p className="mt-3 text-xs text-muted-foreground">You stay signed in for 30 days on each browser. Changing the password signs out every browser. Forgotten it? Run npm run admin:password in the project folder.</p>
         </section>
       </div>
     </AdminPage>

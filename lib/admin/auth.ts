@@ -10,7 +10,7 @@ import { connection } from "next/server";
  * changing the password signs every browser out.
  */
 export const ADMIN_COOKIE = "jp_admin";
-const SESSION_MS = 7 * 24 * 60 * 60 * 1000;
+const SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** Service-role client: bypasses row-level security. Server only. */
 export function adminDb() {

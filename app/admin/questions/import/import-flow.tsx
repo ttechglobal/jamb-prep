@@ -26,6 +26,7 @@ export function ImportFlow({ subjects }: { subjects: { id: string; name: string 
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
   const [step, setStep] = useState<"idle" | "years" | "status" | "fetch" | "dry">("idle");
+  const [done, setDone] = useState<{ subject: string; year: string; count: number } | null>(null);
 
   const subjectName = subjects.find((x) => x.id === subjectId)?.name ?? "";
 
@@ -73,6 +74,34 @@ export function ImportFlow({ subjects }: { subjects: { id: string; name: string 
 
   const paper = { exam: EXAM, year, subject: provider };
 
+  /** Called when questions go live or are taken back: refresh the years and show what was imported. */
+  const onLive = (published: number | null) => {
+    if (subjectId) {
+      yearsForSubject(subjectId).then((r) => {
+        if (r.ok) setRows(r.rows);
+      });
+    }
+    if (published && published > 0) {
+      setDone({ subject: subjectName, year, count: published });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (published === null) setDone(null);
+  };
+
+  const anotherYear = () => {
+    clearPaper();
+    setDone(null);
+    document.getElementById("pick-t")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const anotherSubject = () => {
+    setSubjectId("");
+    setRows([]);
+    setProvider("");
+    clearPaper();
+    setDone(null);
+    document.getElementById("pick-t")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const fetchIt = () =>
     run("fetch", async () => {
       setError(null);
@@ -109,6 +138,25 @@ export function ImportFlow({ subjects }: { subjects: { id: string; name: string 
 
   return (
     <div className="space-y-5">
+      {done ? (
+        <section className="rounded-2xl border-2 border-primary/40 bg-primary/10 p-4" role="status" aria-live="polite">
+          <p className="flex items-center gap-2 text-lg font-semibold">
+            <CheckCircle2 className="size-5" aria-hidden />
+            {done.count} {done.subject} {done.year} question{done.count === 1 ? " is" : "s are"} now live.
+          </p>
+          <p className="mt-1 text-sm">
+            {(() => {
+              const total = rows.find((r) => r.year === done.year)?.inBank;
+              return total ? `The bank now holds ${total} ${done.subject} questions for ${done.year}.` : "The year list below is updated.";
+            })()}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button onClick={anotherYear}>Import another {done.subject} year</Button>
+            <Button variant="outline" onClick={anotherSubject}>Import another subject</Button>
+          </div>
+        </section>
+      ) : null}
+
       {/* 1. Pick */}
       <section className="game-card space-y-4 p-4" aria-labelledby="pick-t">
         <h2 id="pick-t" className="text-lg font-semibold">1. Pick a subject and year</h2>
@@ -264,7 +312,7 @@ export function ImportFlow({ subjects }: { subjects: { id: string; name: string 
         </section>
       )}
 
-      {dry ? <Batches key={`${paper.subject}-${paper.year}`} paper={paper} /> : null}
+      {dry ? <Batches key={`${paper.subject}-${paper.year}`} paper={paper} onLive={onLive} /> : null}
     </div>
   );
 }
