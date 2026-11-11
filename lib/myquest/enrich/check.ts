@@ -69,7 +69,7 @@ function badMath(tex: string): boolean {
 /** Prose that names an option by letter, which breaks if options are ever shuffled. */
 const LETTER_IN_PROSE = /\boptions?\s*\(?[A-D]\)?(?![A-Za-z])|\b(?:answer|choice)\s+(?:is\s+)?\(?[A-D]\)?(?![A-Za-z])|\([A-D]\)/;
 
-export function checkBatch(subjectId: string, batch: BatchQuestion[], items: RawItem[], topics: TopicEntry[]): BatchCheck {
+export function checkBatch(subjectId: string, batch: BatchQuestion[], items: RawItem[], topics: TopicEntry[], opts: { sourceKey?: boolean } = {}): BatchCheck {
   const moduleKey = MODULE_FOR_SUBJECT[subjectId] ?? "recall";
   const byId = new Map<string, RawItem[]>();
   const unknownIds: string[] = [];
@@ -144,7 +144,14 @@ export function checkBatch(subjectId: string, batch: BatchQuestion[], items: Raw
 
     // Answer.
     const answer = asString(item.answer).toUpperCase();
-    if (!q.options.some((o) => o.key === answer)) flag("bad_answer", "block", answer ? `The AI answered "${answer}".` : "No answer was given.");
+    if (opts.sourceKey) {
+      // Book questions: the source's key is the answer. The explanation must be written for that same letter.
+      if (!q.correctOption) flag("bad_answer", "block", "MyQuest gave no answer key for this question.");
+      else {
+        base.aiKey = q.correctOption;
+        if (answer !== q.correctOption) flag("key_not_followed", "block", `The AI explained ${answer || "no letter"}, but the source answer is ${q.correctOption}.`);
+      }
+    } else if (!q.options.some((o) => o.key === answer)) flag("bad_answer", "block", answer ? `The AI answered "${answer}".` : "No answer was given.");
     else {
       base.aiKey = answer as OptionKey;
       if (q.correctOption && q.correctOption !== answer) flag("key_disputed", "block", `The AI says ${answer}. MyQuest says ${q.correctOption}.`);

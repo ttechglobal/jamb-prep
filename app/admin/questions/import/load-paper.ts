@@ -2,7 +2,7 @@ import { adminDb, isAdmin } from "@/lib/admin/auth";
 import { parsePage, paperKey } from "@/lib/myquest/client";
 import { codeTopics, makeBatches, type BatchQuestion, type TopicEntry } from "@/lib/myquest/enrich/prompt";
 import { normalisePaper } from "@/lib/myquest/normalise";
-import { MYQUEST_SUBJECTS } from "@/lib/myquest/subjects";
+import { setTextByProvider, subjectForProvider, usesSourceKey } from "@/lib/myquest/subjects";
 import type { PaperInput } from "./types";
 
 /** Topic codes are prefixed per subject so a code is never mistaken for another subject's. */
@@ -24,6 +24,10 @@ export interface Loaded {
   paperId: string;
   paperKey: string;
   subjectId: string;
+  /** The prescribed book these questions are about, when the paper is a set text. */
+  workId: string | null;
+  /** The source answer key is the answer (book questions). */
+  sourceKey: boolean;
   subjectName: string;
   year: number | null;
   topics: TopicEntry[];
@@ -35,7 +39,8 @@ export interface Loaded {
 /** Everything about one fetched paper, rebuilt the same way every time so batch ids stay stable. */
 export async function loadPaper(input: PaperInput): Promise<{ ok: true; data: Loaded } | { ok: false; error: string }> {
   if (!(await isAdmin())) return { ok: false, error: "Sign in again." };
-  const subjectId = MYQUEST_SUBJECTS[input.subject];
+  const subjectId = subjectForProvider(input.subject);
+  const setText = setTextByProvider(input.subject);
   if (!subjectId) return { ok: false, error: "This subject is not in our list yet." };
   const ref = { exam: input.exam, exam_year_id: input.year, subject: input.subject };
   const db = adminDb();
@@ -49,6 +54,12 @@ export async function loadPaper(input: PaperInput): Promise<{ ok: true; data: Lo
     db.from("subjects").select("name").eq("id", subjectId).single(),
     db.from("topics").select("id, name").eq("subject_id", subjectId).eq("active", true).order("sort_order").order("name"),
   ]);
+  let workId: string | null = null;
+  if (setText) {
+    const { data: work } = await db.from("prescribed_works").select("id").eq("title", setText.title).eq("author", setText.author).maybeSingle();
+    if (!work) return { ok: false, error: `${setText.title} is not set up as a prescribed book yet. Apply the latest database migration.` };
+    workId = work.id;
+  }
   const ids = (topicRows ?? []).map((t) => t.id);
   const { data: subRows } = ids.length ? await db.from("subtopics").select("id, name, topic_id").in("topic_id", ids).eq("active", true).order("sort_order").order("name") : { data: [] };
 
@@ -64,7 +75,9 @@ export async function loadPaper(input: PaperInput): Promise<{ ok: true; data: Lo
       paperId: paper.id,
       paperKey: paperKey(ref),
       subjectId,
-      subjectName: subject?.name ?? input.subject,
+      workId,
+      sourceKey: usesSourceKey(subjectId, input.subject),
+      subjectName: setText?.title ?? subject?.name ?? input.subject,
       year: /^\d{4}$/.test(input.year) ? Number(input.year) : null,
       topics,
       batches: makeBatches(questions),

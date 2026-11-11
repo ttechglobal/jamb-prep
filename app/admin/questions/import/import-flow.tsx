@@ -5,6 +5,8 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { YearRow } from "@/lib/myquest/gaps";
+import { SourcePublish } from "./source-publish";
+import { setTextByProvider } from "@/lib/myquest/subjects";
 import { Batches } from "./batches";
 import { dryRunAction, fetchPaperAction, paperStatus, yearsForSubject } from "./actions";
 import { REASON_LABEL, type DryRunResult, type FetchResult, type PaperStatus } from "./types";
@@ -312,7 +314,13 @@ export function ImportFlow({ subjects }: { subjects: { id: string; name: string 
         </section>
       )}
 
-      {dry ? <Batches key={`${paper.subject}-${paper.year}`} paper={paper} onLive={onLive} /> : null}
+      {dry ? (
+        setTextByProvider(provider) ? (
+          <SourcePublish key={`${paper.subject}-${paper.year}`} paper={paper} title={provider} ready={dry.report.ready} onLive={onLive} />
+        ) : (
+          <Batches key={`${paper.subject}-${paper.year}`} paper={paper} onLive={onLive} />
+        )
+      ) : null}
     </div>
   );
 }

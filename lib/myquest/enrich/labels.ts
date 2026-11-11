@@ -5,6 +5,7 @@ export const FLAG_LABEL: Record<string, string> = {
   duplicate_reply: "The AI answered this question more than once",
   status_not_solved: "The AI could not solve this question",
   bad_answer: "The AI's answer is not one of the options",
+  key_not_followed: "The explanation was written for a different answer than the source key",
   key_disputed: "The AI and MyQuest disagree on the answer",
   topic_invalid: "The topic code is not on the list",
   no_topic: "No topic was chosen",

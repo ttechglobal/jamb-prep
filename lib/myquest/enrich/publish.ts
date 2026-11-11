@@ -3,6 +3,7 @@
  * Pure, so the rules that protect students can be tested without a database.
  */
 import type { Block } from "../../content/types.ts";
+import { shuffleOptions } from "./shuffle.ts";
 import type { CheckedQuestion } from "./check.ts";
 
 export interface Excluded {
@@ -44,6 +45,7 @@ export function selectForPublish(
 export interface PublishRow {
   source_ref: string;
   subject_id: string;
+  work_id: string | null;
   topic_id: string | null;
   subtopic_id: string | null;
   year: number | null;
@@ -59,21 +61,23 @@ export interface PublishRow {
 
 export function buildRow(
   q: CheckedQuestion,
-  ctx: { subjectId: string; year: number | null; raw: unknown; figureSrc: string | null; model: string | null; promptVersion: string; overridden: boolean },
+  ctx: { subjectId: string; workId?: string | null; sourceKey?: boolean; year: number | null; raw: unknown; figureSrc: string | null; model: string | null; promptVersion: string; overridden: boolean },
 ): PublishRow {
   if (!q.aiKey || !q.solution) throw new Error("question is not solved");
+  const mixed = shuffleOptions(q.sourceRef, q.stem, q.options, q.aiKey, q.solution);
   const figure: Block[] = ctx.figureSrc ? [{ type: "figure", src: ctx.figureSrc, alt: q.figureAlt }] : [];
   return {
     source_ref: q.sourceRef,
     subject_id: ctx.subjectId,
+    work_id: ctx.workId ?? null,
     topic_id: q.topic?.topicId ?? null,
     subtopic_id: q.subtopic?.subtopicId ?? null,
     year: ctx.year,
     stem: [...figure, ...q.stem],
-    options: q.options,
-    correct_option: q.aiKey,
+    options: mixed.options,
+    correct_option: mixed.correct,
     hint: q.hint.length ? q.hint : null,
-    solution: q.solution,
+    solution: mixed.solution!,
     raw: ctx.raw,
     normalised: {
       aiKey: q.aiKey,
@@ -84,6 +88,8 @@ export function buildRow(
       model: ctx.model,
       promptVersion: ctx.promptVersion,
       keyOverridden: ctx.overridden,
+      keySource: ctx.sourceKey ? "source" : "ai",
+      optionsShuffled: mixed.shuffled,
     },
     notes: [...(ctx.overridden ? ["key_overridden"] : []), ...q.flags.filter((f) => f.severity === "warn").map((f) => f.code)],
   };

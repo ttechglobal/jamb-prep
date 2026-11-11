@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ChartNoAxesColumn, Download, LayoutDashboard, LibraryBig, Menu, Settings, X } from "lucide-react";
+import { Bell, ChartNoAxesColumn, Download, LayoutDashboard, LibraryBig, Menu, School, Settings, Users, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,7 +21,11 @@ const GROUPS = [
   },
   {
     label: "Students",
-    items: [{ href: "/admin/notifications", label: "Notifications", icon: Bell }],
+    items: [
+      { href: "/admin/users", label: "Users", icon: Users },
+      { href: "/admin/schools", label: "Schools", icon: School },
+      { href: "/admin/notifications", label: "Notifications", icon: Bell },
+    ],
   },
   {
     label: "Admin",

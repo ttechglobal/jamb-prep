@@ -28,7 +28,8 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
   if (error) {
     return { error: error.message === "locked" ? "Too many wrong tries. Wait 15 minutes." : "Couldn't check the password. Try again." };
   }
-  if (data !== true) return { error: "That password is not right." };
+  // Says which password was checked, so a missing ADMIN_PASSWORD on the server is obvious and not a mystery.
+  if (data !== true) return { error: "That password is not right. This server has no ADMIN_PASSWORD set, so it checked the older password saved in the database." };
   await startAdminSession();
   revalidatePath("/admin", "layout");
   return {};

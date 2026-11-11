@@ -1,6 +1,6 @@
 "use client";
 
-import { Flag } from "lucide-react";
+import { BookOpen, Flag } from "lucide-react";
 import { Blocks } from "@/components/content/blocks";
 import { SharedContextPanel } from "@/components/content/shared-context";
 import { SubjectIcon } from "@/components/game/game-ui";
@@ -55,6 +55,16 @@ export function QuestionView({
         ) : null}
       </div>
 
+      {question.work ? (
+        <p className="mt-3 inline-flex max-w-full items-start gap-2 rounded-xl bg-gold-soft px-3 py-1.5 text-sm font-semibold text-gold-ink">
+          <BookOpen className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            From the recommended novel: <span className="italic">{question.work.title}</span>, {question.work.author}
+            {question.work.reference ? ` · ${question.work.reference}` : ""}
+          </span>
+        </p>
+      ) : null}
+
       {question.instruction?.length ? (
         <Blocks blocks={question.instruction} className="mt-4 text-sm font-medium italic text-muted-foreground" />
       ) : null}
@@ -73,13 +83,6 @@ export function QuestionView({
       >
         <Blocks blocks={liftExcerpt(question.stem)} />
       </div>
-
-      {question.work ? (
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          <span className="italic">{question.work.title}</span>, {question.work.author}
-          {question.work.reference ? ` · ${question.work.reference}` : ""}
-        </p>
-      ) : null}
 
       <div className="mt-5">
         <OptionList question={question} selected={selected} reveal={reveal} disabled={disabled} still={still} onSelect={onSelect} />

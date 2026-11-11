@@ -43,3 +43,5 @@ next-env.d.ts
 
 # question bank exports: they contain answer keys
 /data/imports/
+
+.vercel

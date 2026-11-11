@@ -4,7 +4,7 @@ import { adminDb, isAdmin } from "@/lib/admin/auth";
 import { createClient, fetchCatalogue, fetchPaper, MyQuestError, paperKey, parsePage, type FetchedPage, type PaperRef } from "@/lib/myquest/client";
 import { yearRows, type StagedInfo, type YearRow } from "@/lib/myquest/gaps";
 import { normalisePaper } from "@/lib/myquest/normalise";
-import { MYQUEST_SUBJECTS, providerName } from "@/lib/myquest/subjects";
+import { providerFor, setTextByKey, setTextByProvider, subjectForProvider } from "@/lib/myquest/subjects";
 import { describeIssue, type DryRunResult, type FetchResult, type Option, type Outcome, type PaperInput, type PaperStatus } from "./types";
 
 const ADAPTER = "mq-1";
@@ -48,19 +48,30 @@ export async function loadCatalogue(kind: "exam" | "exam_year_id" | "subject", p
   }
 }
 
+async function workIdFor(title: string, author: string): Promise<string | null> {
+  const { data } = await adminDb().from("prescribed_works").select("id").eq("title", title).eq("author", author).maybeSingle();
+  return data?.id ?? null;
+}
+
 /** What we already hold for this paper, so it is not fetched twice. */
 export async function paperStatus(input: PaperInput): Promise<Outcome<{ status: PaperStatus }>> {
   if (!(await isAdmin())) return { ok: false, error: "Sign in again." };
   const ref = clean(input);
   if (!ref) return { ok: false, error: "Pick an exam, year and subject." };
   const db = adminDb();
-  const subjectId = MYQUEST_SUBJECTS[ref.subject] ?? null;
+  const subjectId = subjectForProvider(ref.subject);
+  const setText = setTextByProvider(ref.subject);
   const year = /^\d{4}$/.test(String(ref.exam_year_id)) ? Number(ref.exam_year_id) : null;
 
   let inBank = 0;
   if (subjectId && year) {
-    const { count } = await db.from("questions").select("id", { count: "exact", head: true }).eq("subject_id", subjectId).eq("year", year).neq("status", "retired");
-    inBank = count ?? 0;
+    let q = db.from("questions").select("id", { count: "exact", head: true }).eq("subject_id", subjectId).eq("year", year).neq("status", "retired");
+    // A set text counts only its own questions, not the whole English paper.
+    if (setText) {
+      const workId = await workIdFor(setText.title, setText.author);
+      q = workId ? q.eq("work_id", workId) : q.eq("id", "00000000-0000-0000-0000-000000000000");
+    }
+    inBank = (await q).count ?? 0;
   }
   const { data } = await db.from("import_papers").select("status, fetched_total, id").eq("paper_key", paperKey(ref)).maybeSingle();
   let staged: PaperStatus["staged"] = null;
@@ -83,9 +94,11 @@ export async function paperStatus(input: PaperInput): Promise<Outcome<{ status: 
  * For one of our subjects: every JAMB year MyQuest lists, marked as held, fetched or a gap.
  * Listing years costs nothing.
  */
-export async function yearsForSubject(subjectId: string): Promise<Outcome<{ rows: YearRow[]; provider: string }>> {
+export async function yearsForSubject(key: string): Promise<Outcome<{ rows: YearRow[]; provider: string }>> {
   if (!(await isAdmin())) return { ok: false, error: "Sign in again." };
-  const provider = providerName(subjectId);
+  const provider = providerFor(key);
+  const setText = setTextByKey(key);
+  const subjectId = setText?.subjectId ?? key;
   if (!provider) return { ok: false, error: "MyQuest has no matching subject for this one." };
   const db = adminDb();
   try {
@@ -95,11 +108,15 @@ export async function yearsForSubject(subjectId: string): Promise<Outcome<{ rows
       db.from("import_papers").select("provider_year, status, fetched_total").eq("provider_exam", "JAMB").eq("provider_subject", provider),
     ]);
     const bank = new Map<number, number>();
-    for (const c of ((coverage.data as { cells?: { subject_id: string; year: number; published: number; draft: number }[] } | null)?.cells ?? [])) {
+    if (setText) {
+      const workId = await workIdFor(setText.title, setText.author);
+      const { data: held } = workId ? await db.from("questions").select("year").eq("work_id", workId).neq("status", "retired").not("year", "is", null) : { data: [] };
+      for (const r of held ?? []) bank.set(r.year as number, (bank.get(r.year as number) ?? 0) + 1);
+    } else for (const c of ((coverage.data as { cells?: { subject_id: string; year: number; published: number; draft: number }[] } | null)?.cells ?? [])) {
       if (c.subject_id === subjectId) bank.set(c.year, c.published + c.draft);
     }
     const staged = new Map<string, StagedInfo>((papers.data ?? []).map((p) => [p.provider_year, { status: p.status, fetched: p.fetched_total }]));
-    return { ok: true, provider, rows: yearRows(catalogue.entries.map((e) => String(e.value)), bank, staged) };
+    return { ok: true, provider, rows: yearRows(catalogue.entries.map((e) => String(e.value)).filter((y) => !setText || setText.years.includes(y)), bank, staged) };
   } catch (e) {
     return { ok: false, error: friendly(e) };
   }
@@ -127,7 +144,7 @@ export async function fetchPaperAction(input: PaperInput): Promise<Outcome<{ res
         provider_exam: ref.exam,
         provider_year: String(ref.exam_year_id),
         provider_subject: ref.subject,
-        subject_id: MYQUEST_SUBJECTS[ref.subject] ?? null,
+        subject_id: subjectForProvider(ref.subject),
         year,
         status: "fetching",
         adapter_version: ADAPTER,

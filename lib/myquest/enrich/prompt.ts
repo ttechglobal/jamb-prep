@@ -107,6 +107,8 @@ export interface PromptInput {
   batches: number;
   topics: TopicEntry[];
   batch: BatchQuestion[];
+  /** Book questions: the source key is given and is the answer. */
+  sourceKey?: boolean;
 }
 
 function topicBlock(topics: TopicEntry[]): string {
@@ -114,13 +116,14 @@ function topicBlock(topics: TopicEntry[]): string {
   return topics.map((t) => [`${t.code}  ${t.name}`, ...t.subs.map((s) => `    ${s.code}  ${s.name}`)].join("\n")).join("\n");
 }
 
-function questionBlock(b: BatchQuestion): string {
+function questionBlock(b: BatchQuestion, sourceKey = false): string {
   const q = b.question;
   return [
     `=== ${b.id} ===`,
     "Instruction: (none)",
     `Source figure: ${b.figure ? `${b.figure} (attached image)` : "none"}`,
     "Passage: (none)",
+    ...(sourceKey ? [`Source answer key: ${b.question.correctOption ?? "none"}`] : []),
     "Question:",
     plainText(q.stem),
     "Options:",
@@ -135,7 +138,16 @@ export function buildPrompt(input: PromptInput): string {
   return `You are an expert Nigerian JAMB UTME teacher writing for 15 to 18 year old students.
 Subject: ${input.subjectName}. ${input.batches > 1 ? `Part ${input.batchNo} of ${input.batches}, ` : ""}${input.batch.length} questions.
 
-Solve every question yourself. No answer key is given. Use only what is supplied.
+${
+  input.sourceKey
+    ? `These questions are about a book the students read. You cannot check facts in the book, and neither
+can anyone without it, so each question comes with its Source answer key. That key IS the answer. Do not
+doubt it or change it. Use status "solved", set "answer" to that same letter, and explain why that option
+fits using only the wording of the question and options. Never invent a fact, quote, chapter or
+character detail about the book. If the explanation would need a fact you were not given, keep it to what
+the question itself says. Use missing_context only if the question cannot be read at all.`
+    : "Solve every question yourself. No answer key is given. Use only what is supplied."
+}
 
 RULES
 1. Do not invent a passage, quotation, table value, diagram or label. If something the question depends
@@ -166,7 +178,7 @@ ${MODULE_TEXT[moduleKey]}
 
 QUESTIONS
 
-${input.batch.map(questionBlock).join("\n\n")}
+${input.batch.map((b) => questionBlock(b, input.sourceKey)).join("\n\n")}
 ${
   figures.length
     ? `

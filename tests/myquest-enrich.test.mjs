@@ -391,3 +391,49 @@ test("a second part that is itself cut off keeps the complete questions from bot
   assert.deepEqual(r.items.map((i) => i.id), ["q1-aaaa", "q2-bbbb"]);
   assert.equal(r.truncated, true);
 });
+
+test("book questions: the source key is the answer and an explanation for another letter is blocked", () => {
+  const batch = setup(2);
+  const providerKey = batch[0].question.correctOption;
+  const other = providerKey === "A" ? "B" : "A";
+  const wrongFor = (k) => Object.fromEntries(["A", "B", "C", "D"].filter((x) => x !== k).map((x) => [x, "a long enough reason " + x]));
+  const out = checkBatch("literature", batch, [good(batch[0].id, { answer: providerKey, wrong: wrongFor(providerKey) }), good(batch[1].id, { answer: other, wrong: wrongFor(other) })], topics, { sourceKey: true });
+  assert.equal(out.questions[0].aiKey, providerKey);
+  assert.ok(!out.questions[0].flags.some((f) => f.code === "key_disputed" || f.code === "key_not_followed"));
+  assert.ok(out.questions[1].flags.some((f) => f.code === "key_not_followed"));
+  const p = buildPrompt({ subjectId: "literature", subjectName: "Literature", batchNo: 1, batches: 1, topics, batch, sourceKey: true });
+  assert.match(p, /Source answer key: [A-D]/);
+  assert.match(p, /IS the answer/);
+});
+
+import { canShuffle, shuffleOptions } from "../lib/myquest/enrich/shuffle.ts";
+const para = (t) => [{ type: "paragraph", content: [{ text: t }] }];
+const opts = (...t) => t.map((x, i) => ({ key: "ABCD"[i], blocks: para(x) }));
+
+test("shuffling keeps the correct option and its reason together, and is the same every time", () => {
+  const options = opts("one", "two", "three", "four");
+  const solution = { answer: para("because"), wrongOptions: { A: para("not one"), C: para("not three"), D: para("not four") } };
+  let moved = 0;
+  for (let n = 0; n < 40; n++) {
+    const a = shuffleOptions("ref" + n, para("Stem?"), options, "B", solution);
+    const b = shuffleOptions("ref" + n, para("Stem?"), options, "B", solution);
+    assert.deepEqual(a, b);
+    assert.deepEqual(a.options.map((o) => o.key), ["A", "B", "C", "D"]);
+    assert.equal(a.options.find((o) => o.key === a.correct).blocks[0].content[0].text, "two");
+    assert.deepEqual(Object.keys(a.solution.wrongOptions).sort(), ["A", "B", "C", "D"].filter((k) => k !== a.correct));
+    const reasonFor = (k) => a.solution.wrongOptions[k][0].content[0].text;
+    for (const k of Object.keys(a.solution.wrongOptions)) assert.equal(reasonFor(k), "not " + a.options.find((o) => o.key === k).blocks[0].content[0].text);
+    if (a.shuffled) moved++;
+  }
+  assert.ok(moved > 20);
+});
+
+test("questions whose options point at each other are never shuffled", () => {
+  assert.equal(canShuffle(para("Which?"), opts("red", "blue", "Both A and B", "None of the above")), false);
+  assert.equal(canShuffle(para("Which?"), opts("red", "blue", "A and B", "green")), false);
+  assert.equal(canShuffle(para("Pick option B or C."), opts("a", "b", "c", "d")), false);
+  assert.equal(canShuffle(para("Which?"), opts("red", "blue", "green", "pink")), true);
+  const out = shuffleOptions("x", para("Which?"), opts("red", "blue", "All of the above", "pink"), "C", null);
+  assert.equal(out.shuffled, false);
+  assert.equal(out.correct, "C");
+});

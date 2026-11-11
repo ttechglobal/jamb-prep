@@ -1,0 +1,345 @@
+{
+ "mathematics": [
+  {
+   "name": "Number bases and modular arithmetic",
+   "subtopics": [
+    "Operations in number bases",
+    "Conversion between bases",
+    "Modular arithmetic"
+   ]
+  },
+  {
+   "name": "Fractions, decimals, approximations and percentages",
+   "subtopics": [
+    "Fractions and decimals",
+    "Significant figures and decimal places",
+    "Percentage errors",
+    "Simple interest",
+    "Profit and loss percent",
+    "Ratio, proportion and rate",
+    "Shares and VAT"
+   ]
+  },
+  {
+   "name": "Indices, logarithms and surds",
+   "subtopics": [
+    "Laws of indices",
+    "Equations involving indices",
+    "Standard form",
+    "Logarithms",
+    "Surds"
+   ]
+  },
+  {
+   "name": "Sets",
+   "subtopics": [
+    "Types of sets",
+    "Algebra of sets",
+    "Venn diagrams"
+   ]
+  },
+  {
+   "name": "Polynomials and equations",
+   "subtopics": [
+    "Change of subject of formula",
+    "Operations on polynomials",
+    "Factorization",
+    "Roots of polynomials",
+    "Factor and remainder theorems",
+    "Simultaneous equations",
+    "Graphs of polynomials"
+   ]
+  },
+  {
+   "name": "Variation",
+   "subtopics": [
+    "Direct and inverse variation",
+    "Joint and partial variation",
+    "Percentage increase and decrease"
+   ]
+  },
+  {
+   "name": "Inequalities",
+   "subtopics": [
+    "Linear inequalities",
+    "Quadratic inequalities",
+    "Graphs of inequalities"
+   ]
+  },
+  {
+   "name": "Progression",
+   "subtopics": [
+    "nth term of a progression",
+    "Sum of A.P. and G.P.",
+    "Sum to infinity of a G.P."
+   ]
+  },
+  {
+   "name": "Binary operations",
+   "subtopics": [
+    "Closure, commutativity, associativity and distributivity",
+    "Identity and inverse elements"
+   ]
+  },
+  {
+   "name": "Matrices and determinants",
+   "subtopics": [
+    "Algebra of matrices",
+    "Determinants",
+    "Inverses of 2 x 2 matrices"
+   ]
+  },
+  {
+   "name": "Euclidean geometry",
+   "subtopics": [
+    "Angles and lines",
+    "Polygons",
+    "Circles",
+    "Construction"
+   ]
+  },
+  {
+   "name": "Mensuration",
+   "subtopics": [
+    "Plane figures",
+    "Arcs and chords",
+    "Sectors and segments",
+    "Surface areas and volumes of solids",
+    "The earth as a sphere"
+   ]
+  },
+  {
+   "name": "Loci",
+   "subtopics": [
+    "Loci in two dimensions"
+   ]
+  },
+  {
+   "name": "Coordinate geometry",
+   "subtopics": [
+    "Midpoint and gradient",
+    "Distance between two points",
+    "Parallel and perpendicular lines",
+    "Equations of straight lines"
+   ]
+  },
+  {
+   "name": "Trigonometry",
+   "subtopics": [
+    "Trigonometrical ratios",
+    "Angles of elevation and depression",
+    "Bearings",
+    "Areas and solutions of triangles",
+    "Graphs of sine and cosine",
+    "Sine and cosine formulae"
+   ]
+  },
+  {
+   "name": "Differentiation",
+   "subtopics": [
+    "Limit of a function",
+    "Differentiation of functions"
+   ]
+  },
+  {
+   "name": "Application of differentiation",
+   "subtopics": [
+    "Rate of change",
+    "Maxima and minima"
+   ]
+  },
+  {
+   "name": "Integration",
+   "subtopics": [
+    "Integration of functions",
+    "Area under the curve"
+   ]
+  },
+  {
+   "name": "Representation of data",
+   "subtopics": [
+    "Frequency distribution",
+    "Histogram, bar chart and pie chart"
+   ]
+  },
+  {
+   "name": "Measures of location",
+   "subtopics": [
+    "Mean, mode and median",
+    "Cumulative frequency"
+   ]
+  },
+  {
+   "name": "Measures of dispersion",
+   "subtopics": [
+    "Range and mean deviation",
+    "Variance and standard deviation"
+   ]
+  },
+  {
+   "name": "Permutation and combination",
+   "subtopics": [
+    "Linear and circular arrangements",
+    "Arrangements with repeated objects"
+   ]
+  },
+  {
+   "name": "Probability",
+   "subtopics": [
+    "Experimental probability",
+    "Addition and multiplication of probabilities"
+   ]
+  }
+ ],
+ "commerce": [
+  {
+   "name": "Commerce",
+   "subtopics": [
+    "E-commerce and e-business",
+    "Meaning and scope",
+    "Characteristics",
+    "Functions"
+   ]
+  },
+  {
+   "name": "Occupation",
+   "subtopics": [
+    "Meaning and importance",
+    "Types of occupation",
+    "Choice of occupation"
+   ]
+  },
+  {
+   "name": "Production",
+   "subtopics": [
+    "Factors of production and rewards",
+    "Division of labour and specialization",
+    "Types of production",
+    "Production, specialization and exchange"
+   ]
+  },
+  {
+   "name": "Trade",
+   "subtopics": [
+    "Retail trade",
+    "Wholesale trade",
+    "Foreign trade"
+   ]
+  },
+  {
+   "name": "Purchase and sale of goods",
+   "subtopics": [
+    "Procedure and documentation",
+    "Terms of trade",
+    "Terms of payment",
+    "Means of payment"
+   ]
+  },
+  {
+   "name": "Aids to trade",
+   "subtopics": [
+    "Advertising",
+    "Banking",
+    "Communication",
+    "Insurance",
+    "Tourism",
+    "Transportation",
+    "Warehousing"
+   ]
+  },
+  {
+   "name": "Business units",
+   "subtopics": [
+    "Forms and features",
+    "Registration of businesses",
+    "Choice of business unit",
+    "Dissolution and liquidation",
+    "Public enterprises"
+   ]
+  },
+  {
+   "name": "Financing business",
+   "subtopics": [
+    "Sources of finance",
+    "Types of capital",
+    "Capital, profit and turnover",
+    "Problems of sourcing finance",
+    "Bureau de change"
+   ]
+  },
+  {
+   "name": "Trade associations",
+   "subtopics": [
+    "Trade and manufacturers' associations",
+    "Chambers of commerce",
+    "Business combination and merger"
+   ]
+  },
+  {
+   "name": "Money",
+   "subtopics": [
+    "Evolution of money",
+    "Forms and qualities",
+    "Functions of money"
+   ]
+  },
+  {
+   "name": "Stock exchange",
+   "subtopics": [
+    "Importance and functions",
+    "Types of securities",
+    "Transactions and speculation",
+    "Second-tier securities market"
+   ]
+  },
+  {
+   "name": "Elements of business management",
+   "subtopics": [
+    "Functions of management",
+    "Principles of management",
+    "Organizational structure",
+    "Functional areas of business",
+    "Business resources"
+   ]
+  },
+  {
+   "name": "Elements of marketing",
+   "subtopics": [
+    "Importance and functions",
+    "Marketing concept",
+    "Marketing mix",
+    "Market segmentation",
+    "Public relations and customer service",
+    "E-marketing"
+   ]
+  },
+  {
+   "name": "Legal aspects of business",
+   "subtopics": [
+    "Simple contract",
+    "Agency, Sale of Goods and Hire Purchase",
+    "Contract of employment",
+    "Government regulation of business",
+    "Consumer protection",
+    "Regulatory agencies"
+   ]
+  },
+  {
+   "name": "Commodity exchange",
+   "subtopics": [
+    "Meaning and types of commodity",
+    "Requirements for trading",
+    "Methods of trading",
+    "Benefits and constraints"
+   ]
+  },
+  {
+   "name": "Business environment and social responsibility",
+   "subtopics": [
+    "Types of business environment",
+    "Social responsibility and safe products",
+    "Pollution"
+   ]
+  }
+ ]
+}

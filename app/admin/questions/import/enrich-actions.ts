@@ -29,7 +29,7 @@ export interface ReplyResult {
 export async function loadBatches(input: PaperInput): Promise<Outcome<{ batches: BatchView[] }>> {
   const l = await loadPaper(input);
   if (!l.ok) return l;
-  const { paperId, subjectId, subjectName, topics, batches } = l.data;
+  const { paperId, subjectId, subjectName, topics, batches, sourceKey } = l.data;
   const [{ data: saved }, live] = await Promise.all([adminDb().from("import_batch_replies").select("batch_no, reply, model, saved_at").eq("paper_id", paperId), publishedRefs(paperId)]);
   return {
     ok: true,
@@ -43,7 +43,7 @@ export async function loadBatches(input: PaperInput): Promise<Outcome<{ batches:
       return {
         no: i + 1,
         count: batch.length,
-        prompt: buildPrompt({ subjectId, subjectName, batchNo: i + 1, batches: batches.length, topics, batch }),
+        prompt: buildPrompt({ subjectId, subjectName, batchNo: i + 1, batches: batches.length, topics, batch, sourceKey }),
         figures: batch.filter((b) => b.figure && b.question.remoteImage).map((b) => ({ label: b.figure!, url: b.question.remoteImage!, providerId: b.question.providerId })),
         saved: s ? { reply: s.reply, model: s.model, savedAt: s.saved_at } : null,
         published: { count: [...perPublish.values()].reduce((a, b) => a + b, 0), batches: [...perPublish].map(([id, count]) => ({ id, count })) },
@@ -56,13 +56,13 @@ export async function loadBatches(input: PaperInput): Promise<Outcome<{ batches:
 export async function checkReplyAction(input: PaperInput, batchNo: number, reply: string, model: string): Promise<Outcome<{ result: ReplyResult }>> {
   const l = await loadPaper(input);
   if (!l.ok) return l;
-  const { paperId, subjectId, topics, batches } = l.data;
+  const { paperId, subjectId, topics, batches, sourceKey } = l.data;
   const batch = batches[batchNo - 1];
   if (!batch) return { ok: false, error: "That batch does not exist." };
   if (reply.length > 400_000) return { ok: false, error: "That reply is too long to be right. Paste only the code block." };
 
   const parsed = parseReply(reply);
-  const { questions, unknownIds } = parsed.error ? { questions: [], unknownIds: [] } : checkBatch(subjectId, batch, parsed.items, topics);
+  const { questions, unknownIds } = parsed.error ? { questions: [], unknownIds: [] } : checkBatch(subjectId, batch, parsed.items, topics, { sourceKey });
 
   // Never offer to publish a question twice.
   const live = await publishedRefs(paperId);
