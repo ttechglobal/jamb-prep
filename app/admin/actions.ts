@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import * as webpush from "web-push";
-import { adminDb, endAdminSession, isAdmin, startAdminSession } from "@/lib/admin/auth";
+import { adminDb, endAdminSession, isAdmin, startAdminSession, usingEnvPassword, verifyEnvPassword } from "@/lib/admin/auth";
+import { readEnvPassword } from "@/lib/admin/env-password";
 
 export interface FormState {
   error?: string;
@@ -12,7 +13,18 @@ export interface FormState {
 const KINDS = ["morning_goal", "morning_plain", "morning_countdown", "evening_streak", "evening_nudge"];
 
 export async function login(_: FormState, form: FormData): Promise<FormState> {
-  const { data, error } = await adminDb().rpc("admin_verify_password", { p_password: String(form.get("password") ?? "") });
+  const given = String(form.get("password") ?? "");
+  // A password in .env.local replaces the database one.
+  if (usingEnvPassword() || readEnvPassword().problem) {
+    const result = verifyEnvPassword(given);
+    if (result === "too_short") return { error: "ADMIN_PASSWORD in .env.local is shorter than 8 characters, so it can't be used." };
+    if (result === "locked") return { error: "Too many wrong tries. Wait 15 minutes." };
+    if (result !== "ok") return { error: "That password is not right." };
+    await startAdminSession();
+    revalidatePath("/admin", "layout");
+    return {};
+  }
+  const { data, error } = await adminDb().rpc("admin_verify_password", { p_password: given });
   if (error) {
     return { error: error.message === "locked" ? "Too many wrong tries. Wait 15 minutes." : "Couldn't check the password. Try again." };
   }
@@ -29,6 +41,7 @@ export async function logout() {
 
 export async function changePassword(_: FormState, form: FormData): Promise<FormState> {
   if (!(await isAdmin())) return { error: "Sign in again." };
+  if (usingEnvPassword()) return { error: "The password is set in .env.local. Change it there, then restart the server." };
   const next = String(form.get("next") ?? "");
   if (next.length < 8) return { error: "Use at least 8 characters." };
   if (next !== String(form.get("confirm") ?? "")) return { error: "The two passwords don't match." };

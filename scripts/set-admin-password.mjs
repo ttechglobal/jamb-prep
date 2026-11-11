@@ -1,14 +1,13 @@
-// Sets (or resets) the admin password from your own terminal. Run: npm run admin:password
+// Puts the admin password in .env.local as ADMIN_PASSWORD. Run: npm run admin:password
 //
-// The password is typed here and never shown or stored anywhere but the database, as a bcrypt hash.
-// It does not pass through any chat. Setting it signs out every browser that was signed in.
-import postgres from "postgres";
+// You type it here, hidden, so it never passes through a chat. It is written only to .env.local, which
+// git ignores. Restart the dev server afterwards so it is picked up. You can also edit the line by hand.
+import fs from "node:fs";
 
-const url = process.env.SUPABASE_DB_URL;
-if (!url) {
-  console.error("SUPABASE_DB_URL is missing from .env.local");
-  process.exit(1);
-}
+const FILE = ".env.local";
+// Letters, digits and these symbols are safe in an env file without quoting.
+const SAFE = /^[A-Za-z0-9\-_.!@%+=:,/]{8,}$/;
+
 if (!process.stdin.isTTY) {
   console.error("Run this in a terminal you can type in: npm run admin:password");
   process.exit(1);
@@ -42,9 +41,9 @@ function ask(question) {
   });
 }
 
-const first = await ask("New admin password (at least 8 characters): ");
-if (first.length < 8) {
-  console.error("That is too short. Nothing was changed.");
+const first = await ask("New admin password (8 or more letters, digits or - _ . ! @ % + = : , /): ");
+if (!SAFE.test(first)) {
+  console.error("That password is too short or has a character that does not work in .env.local (spaces, quotes, # or backslashes). Nothing was changed.");
   process.exit(1);
 }
 const second = await ask("Type it again: ");
@@ -53,13 +52,9 @@ if (first !== second) {
   process.exit(1);
 }
 
-const sql = postgres(url);
-try {
-  await sql`select public.admin_set_password(${first})`;
-  console.log("Done. The admin password is set. Sign in at /admin. You stay signed in for 30 days per browser.");
-} catch (e) {
-  console.error("Could not set the password:", e.message);
-  process.exitCode = 1;
-} finally {
-  await sql.end();
-}
+const text = fs.existsSync(FILE) ? fs.readFileSync(FILE, "utf8") : "";
+const eol = text.includes("\r\n") ? "\r\n" : "\n";
+const line = `ADMIN_PASSWORD=${first}`;
+const next = /^ADMIN_PASSWORD=.*$/m.test(text) ? text.replace(/^ADMIN_PASSWORD=.*$/m, line) : `${text}${text && !text.endsWith("\n") ? eol : ""}${line}${eol}`;
+fs.writeFileSync(FILE, next);
+console.log("Done. ADMIN_PASSWORD is in .env.local. Restart the dev server, then sign in at /admin.");
