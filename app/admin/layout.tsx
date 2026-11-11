@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { LogOut } from "lucide-react";
 import { logout } from "@/app/admin/actions";
 import { AdminSidebar } from "@/components/admin/sidebar";
@@ -17,7 +18,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-dvh lg:flex">
-      <AdminSidebar signOut={signOut} />
+      {/* The sidebar reads the pathname, which is not known at build time on pages like /admin/users/[id]. */}
+      <Suspense fallback={<aside className="hidden w-64 shrink-0 border-r-2 lg:block" aria-hidden />}>
+        <AdminSidebar signOut={signOut} />
+      </Suspense>
       <main className="min-w-0 flex-1 px-4 py-6 lg:px-8">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
