@@ -8,9 +8,11 @@ import { useAppState } from "@/lib/app-state";
 import { liveStreak } from "@/lib/game/rules";
 import { cn } from "@/lib/utils";
 
-/** Only functional destinations are shown. Leaderboard and Learn join this list when they ship. Games sits under the progress card on the home page. */
+/** Desktop navigation. Phones use the bottom bar instead. */
 const NAV = [
   { href: "/practice", label: "Practice" },
+  { href: "/games", label: "Games" },
+  { href: "/leaderboard", label: "Leaderboard" },
 ];
 
 export function AppHeader() {

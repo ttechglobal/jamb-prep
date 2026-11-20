@@ -14,6 +14,7 @@ export type EventName =
   | "register_view"
   | "register_submitted"
   | "onboarding_done"
+  | "leaderboard_view"
   | "game_started"
   | "game_completed"
   | "install_accepted"

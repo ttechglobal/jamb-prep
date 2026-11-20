@@ -75,7 +75,7 @@ export function AppNudges() {
   const close = () => setKind(null);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-3 sm:left-auto sm:right-4 sm:max-w-sm sm:p-0 sm:pb-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-20 z-40 p-3 sm:bottom-0 sm:left-auto sm:right-4 sm:max-w-sm sm:p-0 sm:pb-4">
       <section
         role="dialog"
         aria-label={kind === "install" ? "Install JAMB Prep" : "Practice reminders"}
