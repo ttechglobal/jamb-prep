@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { BookOpenCheck, ChevronRight, Clock, Gamepad2, Loader2, Target, Trophy, Zap } from "lucide-react";
 import { useState } from "react";
 import { LevelBar, SubjectIcon } from "@/components/game/game-ui";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useStartSession } from "@/hooks/use-start-session";
 import { useAppState } from "@/lib/app-state";
 import { quickFive } from "@/lib/engine/presets";
@@ -83,18 +81,14 @@ export default function PracticePage() {
               tint="bg-sky-soft text-sky"
               title="Subject Practice"
               description="Pick a subject and topic"
-              intro="Choose a subject and a topic, then work through questions at your own pace."
             />
-            <ModeCard href="/practice/timed" icon={Clock} tint="bg-flame-soft text-flame" title="Timed Practice" description="Beat the clock"
-              intro="Answer against a countdown, the way the real exam feels."
-            />
+            <ModeCard href="/practice/timed" icon={Clock} tint="bg-flame-soft text-flame" title="Timed Practice" description="Beat the clock" />
             <ModeCard
               href="/practice/mock"
               icon={Trophy}
               tint="bg-violet-soft text-violet"
               title="Mock Exam"
               description="Full UTME CBT, 2 hours"
-              intro="A full UTME-style paper across your four subjects, timed for two hours."
             />
             <ModeCard
               href="/games"
@@ -102,7 +96,6 @@ export default function PracticePage() {
               tint="bg-gold-soft text-gold-ink"
               title="Games"
               description="Practise by playing"
-              intro="Short English games. Pick a level, play a few rounds and earn stars."
               className="lg:hidden"
             />
           </section>
@@ -131,7 +124,6 @@ export default function PracticePage() {
           tint="bg-gold-soft text-gold-ink"
           title="Games"
           description="Practise by playing"
-              intro="Short English games. Pick a level, play a few rounds and earn stars."
           className="hidden min-h-0 lg:flex"
         />
         </div>
@@ -146,7 +138,6 @@ function ModeCard({
   tint,
   title,
   description,
-  intro,
   className,
 }: {
   href: string;
@@ -154,47 +145,22 @@ function ModeCard({
   tint: string;
   title: string;
   description: string;
-  /** One plain sentence on what happens next, shown in the Ready sheet. */
-  intro: string;
   className?: string;
 }) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={cn(
-          "game-card game-tap group flex min-h-30 flex-col p-4 text-left",
-          "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-          className,
-        )}
-      >
-        <span className={cn("grid size-10 place-items-center rounded-xl", tint)}>
-          <Icon className="size-5" strokeWidth={2.4} />
-        </span>
-        <p className="mt-auto pt-3 font-display text-[1.05rem] font-semibold leading-tight">{title}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-      </button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="gap-3 p-6 text-center">
-          <span aria-hidden className={cn("mx-auto grid size-16 place-items-center rounded-2xl", tint)}>
-            <Icon className="size-8" strokeWidth={2.2} />
-          </span>
-          <DialogTitle className="font-display text-2xl font-semibold">{title}</DialogTitle>
-          <DialogDescription className="text-base leading-snug">{intro}</DialogDescription>
-          <p className="font-display text-lg font-semibold">Ready to practise?</p>
-          <button
-            type="button"
-            autoFocus
-            onClick={() => router.push(href)}
-            className={buttonVariants({ size: "xl", className: "w-full" })}
-          >
-            Start practising
-          </button>
-        </DialogContent>
-      </Dialog>
-    </>
+    <Link
+      href={href}
+      className={cn(
+        "game-card game-tap group flex min-h-30 flex-col p-4 text-left",
+        "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        className,
+      )}
+    >
+      <span className={cn("grid size-10 place-items-center rounded-xl", tint)}>
+        <Icon className="size-5" strokeWidth={2.4} />
+      </span>
+      <p className="mt-auto pt-3 font-display text-[1.05rem] font-semibold leading-tight">{title}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+    </Link>
   );
 }

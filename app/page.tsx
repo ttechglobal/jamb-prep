@@ -1,19 +1,13 @@
 import Link from "next/link";
-import { BookOpenCheck, Check, Clock, Trophy, Zap } from "lucide-react";
+import { Check } from "lucide-react";
 import { TrackView } from "@/components/analytics/track-view";
 import { Logo } from "@/components/brand/logo";
 import { Meter } from "@/components/game/game-ui";
+import { LandingModeCards } from "@/components/landing/mode-cards";
 import { StartPractisingButton } from "@/components/landing/start-practising-button";
 import { InstallButton } from "@/components/pwa/install-button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const MODES = [
-  { icon: Zap, label: "Quick Five", hint: "5 questions, instantly", tint: "bg-gold-soft text-gold-ink" },
-  { icon: BookOpenCheck, label: "Topic Practice", hint: "Drill weak topics", tint: "bg-sky-soft text-sky" },
-  { icon: Clock, label: "Timed Practice", hint: "Beat the clock", tint: "bg-flame-soft text-flame" },
-  { icon: Trophy, label: "Mock Exam", hint: "Full UTME CBT", tint: "bg-violet-soft text-violet" },
-];
 
 export default function LandingPage() {
   return (
@@ -61,17 +55,7 @@ export default function LandingPage() {
       </div>
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Practice modes">
-          {MODES.map(({ icon: Icon, label, hint, tint }) => (
-            <li key={label} className="game-card p-4">
-              <span className={cn("grid size-10 place-items-center rounded-xl", tint)}>
-                <Icon className="size-5" strokeWidth={2.4} aria-hidden />
-              </span>
-              <p className="mt-3 font-display font-semibold leading-tight">{label}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
-            </li>
-          ))}
-        </ul>
+        <LandingModeCards />
       </main>
 
       <footer className="mx-auto w-full max-w-5xl px-4 py-6 text-xs text-muted-foreground">

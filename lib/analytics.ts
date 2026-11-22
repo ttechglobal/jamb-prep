@@ -8,6 +8,8 @@ import { supabase } from "@/lib/supabase/client";
 export type EventName =
   | "landing_view"
   | "start_click"
+  | "landing_card_click"
+  | "landing_start_click"
   | "round_started"
   | "round_completed"
   | "free_limit_reached"
