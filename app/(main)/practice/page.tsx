@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookOpenCheck, ChevronRight, Clock, Gamepad2, Loader2, Target, Trophy, Zap } from "lucide-react";
 import { useState } from "react";
 import { LevelBar, SubjectIcon } from "@/components/game/game-ui";
+import { WorkOnThis } from "@/components/practice/work-on-this";
 import { Button } from "@/components/ui/button";
 import { useStartSession } from "@/hooks/use-start-session";
 import { useAppState } from "@/lib/app-state";
@@ -74,7 +75,9 @@ export default function PracticePage() {
             </ul>
           </section>
 
-          <section aria-label="More practice" className="order-3 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-3">
+          <WorkOnThis />
+
+          <section aria-label="More practice" className="order-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-3">
             <ModeCard
               href="/practice/subject"
               icon={BookOpenCheck}

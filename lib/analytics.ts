@@ -10,6 +10,8 @@ export type EventName =
   | "start_click"
   | "landing_card_click"
   | "landing_start_click"
+  | "needs_work_shown"
+  | "needs_work_tapped"
   | "round_started"
   | "round_completed"
   | "free_limit_reached"
