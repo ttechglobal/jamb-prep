@@ -71,7 +71,7 @@ export function WorkOnThis() {
                 </p>
               </div>
               <Button
-                variant="white"
+                variant="outline"
                 size="lg"
                 disabled={starting}
                 aria-label={`Practise ${t.topicName}`}

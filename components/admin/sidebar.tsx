@@ -4,6 +4,7 @@ import { Bell, ChartNoAxesColumn, Download, LayoutDashboard, LibraryBig, Menu, S
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LogoMark } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 const GROUPS = [
@@ -35,6 +36,15 @@ const GROUPS = [
 
 /** Exact match, so Coverage is not lit up while Topic frequency is open. */
 const isActive = (pathname: string, href: string) => pathname === href || pathname === `${href}/`;
+
+function AdminBrand() {
+  return (
+    <span className="inline-flex items-center gap-2 font-display text-lg font-semibold">
+      <LogoMark />
+      JAMB Prep admin
+    </span>
+  );
+}
 
 function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
@@ -92,11 +102,11 @@ export function AdminSidebar({ signOut }: { signOut: React.ReactNode }) {
         >
           <Menu className="size-6" aria-hidden />
         </button>
-        <span className="font-display text-lg font-semibold">JAMB Prep admin</span>
+        <AdminBrand />
       </header>
 
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r-2 bg-background lg:flex">
-        <p className="px-6 pb-3 pt-5 font-display text-lg font-semibold">JAMB Prep admin</p>
+        <div className="px-6 pb-3 pt-5"><AdminBrand /></div>
         <div className="flex-1 overflow-y-auto px-3 pb-3">
           <NavLinks pathname={pathname} />
         </div>
@@ -108,7 +118,7 @@ export function AdminSidebar({ signOut }: { signOut: React.ReactNode }) {
           <button type="button" aria-label="Close menu" onClick={() => setOpen(false)} className="absolute inset-0 bg-foreground/40" />
           <div id="admin-menu" role="dialog" aria-modal="true" aria-label="Admin menu" className={cn("absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-background shadow-xl")}>
             <div className="flex h-14 items-center justify-between border-b-2 pl-5 pr-2">
-              <span className="font-display text-lg font-semibold">JAMB Prep admin</span>
+              <AdminBrand />
               <button type="button" onClick={() => setOpen(false)} aria-label="Close menu" className="inline-flex size-11 items-center justify-center rounded-xl hover:bg-muted">
                 <X className="size-6" aria-hidden />
               </button>

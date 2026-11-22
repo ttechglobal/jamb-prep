@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LevelBar, SubjectIcon } from "@/components/game/game-ui";
+import { SubjectIcon } from "@/components/game/game-ui";
 import { DeviceSettings } from "@/components/pwa/device-settings";
 import { SubjectPicker, isValidSubjectSelection } from "@/components/profile/subject-picker";
 import { SubjectTargets } from "@/components/profile/subject-targets";
@@ -38,7 +38,7 @@ type Section = "name" | "subjects" | "targets";
 /** Shows each setting as plain text. Tapping Edit opens just that one, so nothing is editable by accident. */
 function SettingsForm({ email, profile, startWith }: { email: string; profile: Profile; startWith: Section | null }) {
   const router = useRouter();
-  const { progress, saveProfile, signOut } = useAppState();
+  const { saveProfile, signOut } = useAppState();
   const [name, setName] = useState(profile.displayName);
   const [subjects, setSubjects] = useState(profile.subjectIds);
   const [targets, setTargets] = useState(profile.subjectTargets);
@@ -88,22 +88,6 @@ function SettingsForm({ email, profile, startWith }: { email: string; profile: P
   return (
     <div className="mx-auto max-w-xl space-y-4">
       <h1 className="text-3xl font-semibold">Your profile</h1>
-
-      <section aria-label="Your stats" className="game-card p-4">
-        <LevelBar xp={progress.xp} />
-        <dl className="mt-3 grid grid-cols-3 gap-2 border-t-2 pt-3 text-center">
-          {[
-            ["Best streak", progress.bestStreak],
-            ["Rounds", progress.sessionsCompleted],
-            ["Questions", progress.questionsAnswered],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dd className="font-display text-xl font-semibold">{value}</dd>
-              <dt className="text-xs text-muted-foreground">{label}</dt>
-            </div>
-          ))}
-        </dl>
-      </section>
 
       <section className="game-card p-4" aria-labelledby="name-title">
         <SectionHeader id="name-title" title="Display name" editing={open.name} onToggle={() => toggle("name")} />

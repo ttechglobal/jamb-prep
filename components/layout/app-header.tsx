@@ -13,6 +13,7 @@ const NAV = [
   { href: "/practice", label: "Practice" },
   { href: "/games", label: "Games" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/progress", label: "Progress" },
 ];
 
 export function AppHeader() {

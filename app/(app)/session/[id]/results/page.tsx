@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState } from "react";
 import { Confetti, Meter, Stars, SubjectIcon } from "@/components/game/game-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { partnerAction } from "@/lib/partners/client";
 import { track } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
 import { data } from "@/lib/data";
@@ -71,6 +72,8 @@ function Results() {
       setReward(recorded.reward);
       setProgress(recorded.progress);
       setRoundsUsed(await data.guestRoundsUsed());
+      // Tells study partners, once a day, that this student has practised. Never blocks the results.
+      if (!isGuest) void partnerAction({ action: "practised" }).catch(() => {});
     })();
     return () => {
       cancelled = true;

@@ -50,16 +50,13 @@ function RanksArt() {
   );
 }
 
-function MeArt() {
+function ProgressArt() {
   return (
     <svg viewBox="0 0 48 48" className="size-full" aria-hidden>
-      <circle cx="24" cy="24" r="18" fill="#38BDF8" {...stroke} />
-      <path d="M12 19c2-8 9-10 14-9 6 1 10 5 10 9-4-3-9-4-24 0z" fill="#1D4ED8" {...stroke} />
-      <circle cx="18" cy="26" r="2.400" fill={INK} />
-      <circle cx="30" cy="26" r="2.400" fill={INK} />
-      <path d="M18 33c2.500 3 9.500 3 12 0" fill="none" {...stroke} />
-      <circle cx="14.500" cy="31" r="2.200" fill="#FDA4AF" opacity=".9" />
-      <circle cx="33.500" cy="31" r="2.200" fill="#FDA4AF" opacity=".9" />
+      <rect x="5" y="27" width="10" height="15" rx="2.500" fill="#38BDF8" {...stroke} />
+      <rect x="19" y="18" width="10" height="24" rx="2.500" fill="#22C55E" {...stroke} />
+      <rect x="33" y="8" width="10" height="34" rx="2.500" fill="#FACC15" {...stroke} />
+      <path d="M8 20l9-7 8 3 10-9" fill="none" stroke="#F87171" strokeWidth="2.600" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -68,7 +65,7 @@ const TABS = [
   { href: "/practice", label: "Practice", Art: PracticeArt },
   { href: "/games", label: "Games", Art: GamesArt },
   { href: "/leaderboard", label: "Ranks", Art: RanksArt },
-  { href: "/settings", label: "Me", Art: MeArt },
+  { href: "/progress", label: "Progress", Art: ProgressArt },
 ];
 
 /** While someone is playing a game level the bar steps aside, like it does in a practice round. */
