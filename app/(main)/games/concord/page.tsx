@@ -13,7 +13,7 @@ export default function ConcordMapPage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <Link href="/games" className="mb-2 inline-flex h-11 items-center gap-1.5 rounded-xl px-2 font-semibold text-muted-foreground hover:text-foreground">
+      <Link href="/games/english" className="mb-2 inline-flex h-11 items-center gap-1.5 rounded-xl px-2 font-semibold text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-5" aria-hidden />
         Games
       </Link>

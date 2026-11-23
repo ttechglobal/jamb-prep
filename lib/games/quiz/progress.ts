@@ -53,16 +53,16 @@ async function saveRemote(gameId: string, p: QuizProgress) {
 }
 
 /** A level opens once the one before it has a star. The first is always open. */
-export function isUnlocked(game: QuizGame, p: QuizProgress, levelId: string) {
+export function isUnlocked(game: { levels: { id: string }[] }, p: QuizProgress, levelId: string) {
   const i = game.levels.findIndex((l) => l.id === levelId);
   return i <= 0 || (p.stars[game.levels[i - 1].id] ?? 0) >= 1;
 }
 
-export function mixedUnlocked(game: QuizGame, p: QuizProgress) {
+export function mixedUnlocked(game: { levels: { id: string }[] }, p: QuizProgress) {
   return game.levels.slice(0, 2).every((l) => (p.stars[l.id] ?? 0) >= 1);
 }
 
-export function useQuizProgress(game: QuizGame) {
+export function useQuizProgress(game: Pick<QuizGame, "id">) {
   const { hydrated, account } = useAppState();
   const signedIn = Boolean(account);
   const [progress, setProgress] = useState<QuizProgress>(empty);
