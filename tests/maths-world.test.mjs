@@ -151,3 +151,4 @@ test("every puzzle's own final line is accepted as its answer", async () => {
   const { checkAnswer } = await import("../lib/games/maths/answer.ts");
   for (const p of PUZZLES) assert.ok(checkAnswer(last(p), last(p)), `${p.id}: ${last(p)}`);
 });
+

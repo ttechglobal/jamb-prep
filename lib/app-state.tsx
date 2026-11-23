@@ -34,9 +34,9 @@ const Ctx = createContext<AppState | null>(null);
 
 function friendlyAuthError(error: AuthError) {
   const code = error.code ?? "";
-  if (code === "invalid_credentials") return "That email or password is incorrect.";
+  if (code === "invalid_credentials") return "That phone number, email or password is incorrect.";
   if (code === "email_not_confirmed") return "Confirm your email first, using the link we sent you.";
-  if (code === "email_exists" || code === "user_already_exists") return "That email already has an account. Sign in instead.";
+  if (code === "email_exists" || code === "user_already_exists") return "That phone number or email already has an account. Sign in instead.";
   if (code === "weak_password") return "Choose a stronger password.";
   if (code.includes("rate_limit")) return "Too many attempts. Wait a few minutes and try again.";
   return "That didn't work. Check your connection and try again.";

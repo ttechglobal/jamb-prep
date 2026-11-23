@@ -15,6 +15,7 @@ import { useAppState } from "@/lib/app-state";
 import { SUBJECTS } from "@/lib/catalog";
 import { SUBJECT_TARGET, UTME_FORMAT } from "@/lib/exam-format";
 import { targetsFor } from "@/lib/profile";
+import { accountLabel } from "@/lib/auth/phone";
 import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +31,7 @@ function Settings() {
   const { account, profile } = useAppState();
   const edit = useSearchParams().get("edit");
   if (!account || !profile) return null;
-  return <SettingsForm email={account.email} profile={profile} startWith={edit === "targets" ? "targets" : null} />;
+  return <SettingsForm email={accountLabel(account.email)} profile={profile} startWith={edit === "targets" ? "targets" : null} />;
 }
 
 type Section = "name" | "subjects" | "targets";

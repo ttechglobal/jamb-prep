@@ -6,10 +6,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { normalisePhone } from "@/lib/auth/phone";
 import { supabase } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
+  const [phone, setPhone] = useState(false);
 
   return (
     <div className="game-card p-6 sm:p-7">
@@ -30,6 +32,12 @@ export default function ForgotPasswordPage() {
             onSubmit={async (e) => {
               e.preventDefault();
               const email = String(new FormData(e.currentTarget).get("email") ?? "").trim();
+              // A phone number has no inbox, so there is nothing to send a link to.
+              if (normalisePhone(email)) {
+                setPhone(true);
+                return;
+              }
+              setPhone(false);
               // Always shows the same message, so this page can't reveal who has an account.
               await supabase().auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
               setSent(true);
@@ -37,7 +45,12 @@ export default function ForgotPasswordPage() {
           >
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required autoComplete="email" className="h-12 text-base" />
+              <Input id="email" name="email" type="text" inputMode="email" required autoComplete="email" className="h-12 text-base" />
+              {phone ? (
+                <p role="alert" className="text-sm text-destructive">
+                  That is a phone number. Accounts made with a phone number can&apos;t get a reset link, because nothing can be sent to a phone. Sign in with the password you chose, or create a new account.
+                </p>
+              ) : null}
             </div>
             <Button type="submit" size="xl" className="w-full">Send reset link</Button>
           </form>

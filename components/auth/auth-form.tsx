@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { track, trackOnce } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
+import { normalisePhone, phoneToEmail } from "@/lib/auth/phone";
 import { inviterName, savedInvite } from "@/lib/partners/client";
 
 type Mode = "login" | "register";
@@ -24,11 +25,15 @@ const COPY = {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type Method = "phone" | "email";
+
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const { login, register } = useAppState();
   const [confirmEmail, setConfirmEmail] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Phone first: it is what most students have, and nothing is sent to it.
+  const [method, setMethod] = useState<Method>("phone");
   const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
   const copy = COPY[mode];
 
@@ -47,10 +52,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    const email = String(form.get("email") ?? "").trim();
+    const typed = String(form.get("email") ?? "").trim();
     const password = String(form.get("password") ?? "");
     const next: typeof errors = {};
-    if (!EMAIL_RE.test(email)) next.email = "Enter a valid email address.";
+    // A phone number becomes a stand-in address, so the rest of sign-up works the same for both.
+    const phone = method === "phone" ? normalisePhone(typed) : null;
+    const email = method === "phone" ? (phone ? phoneToEmail(phone) : "") : typed;
+    if (method === "phone" ? !phone : !EMAIL_RE.test(email)) {
+      next.email = method === "phone" ? "Enter a Nigerian phone number, like 0801 234 5678." : "Enter a valid email address.";
+    }
     if (password.length < 8) next.password = "Password must be at least 8 characters.";
     setErrors(next);
     if (Object.keys(next).length) return;
@@ -64,7 +74,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       } else {
         const result = await register(email, password);
         void track("register_submitted", { confirmEmail: result === "confirm_email" });
-        if (result === "confirm_email") setConfirmEmail(email);
+        if (result === "confirm_email") setConfirmEmail(typed);
         else router.push("/onboarding");
       }
     } catch (err) {
@@ -98,13 +108,27 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
       <form onSubmit={onSubmit} noValidate className="mt-6 space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="email">{method === "phone" ? "Phone number" : "Email"}</Label>
+            <button
+              type="button"
+              onClick={() => {
+                setMethod(method === "phone" ? "email" : "phone");
+                setErrors({});
+              }}
+              className="-my-2 inline-block py-2 text-sm font-medium text-primary hover:underline"
+            >
+              {method === "phone" ? "Use email instead" : "Use phone number instead"}
+            </button>
+          </div>
           <Input
+            key={method}
             id="email"
             name="email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
+            type={method === "phone" ? "tel" : "email"}
+            autoComplete={method === "phone" ? "tel" : "email"}
+            inputMode={method === "phone" ? "tel" : "email"}
+            placeholder={method === "phone" ? "0801 234 5678" : undefined}
             className="h-12 text-base"
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "email-error" : undefined}
@@ -130,6 +154,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
             aria-describedby={errors.password ? "password-error" : undefined}
           />
           {errors.password ? <p id="password-error" className="text-sm text-destructive">{errors.password}</p> : null}
+          {mode === "register" && method === "phone" && !errors.password ? (
+            <p className="text-xs text-muted-foreground">Choose one you will remember. A phone number can&apos;t get a reset link.</p>
+          ) : null}
         </div>
         {errors.form ? <p role="alert" className="text-sm text-destructive">{errors.form}</p> : null}
         <Button type="submit" size="xl" className="w-full" disabled={pending}>
