@@ -9,8 +9,7 @@ import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
-import { INVITE_KEY, partnerAction } from "@/lib/partners/client";
-import { supabase } from "@/lib/supabase/client";
+import { INVITE_KEY, cleanInviteCode, inviterName, partnerAction } from "@/lib/partners/client";
 import { cn } from "@/lib/utils";
 
 /** Where an invite link lands. The code is kept so it still works after the friend signs up. */
@@ -24,32 +23,31 @@ export default function JoinPage() {
 }
 
 function Join() {
-  const code = String(useParams<{ code: string }>().code ?? "").toUpperCase().slice(0, 6);
+  const code = cleanInviteCode(useParams<{ code: string }>().code) ?? "";
   const router = useRouter();
   const { hydrated, account, profile } = useAppState();
   const [name, setName] = useState<string | null | undefined>(undefined);
   const [joining, setJoining] = useState(false);
 
   useEffect(() => {
+    if (!code) return;
     try {
       localStorage.setItem(INVITE_KEY, code);
     } catch {
-      // Private mode: the friend can still enter the code by hand.
+      // Private mode: the code still travels with the account when they sign up.
     }
-    supabase()
-      .rpc("partner_code_owner", { p_code: code })
-      .then(({ data, error }) => setName(error ? null : ((data as string | null) ?? null)));
+    void inviterName(code).then(setName);
   }, [code]);
 
   async function join() {
     setJoining(true);
     try {
-      const { status } = await partnerAction({ action: "request", code });
+      await partnerAction({ action: "accept_invite", code });
       try {
         localStorage.removeItem(INVITE_KEY);
       } catch {}
-      void track(status === "active" ? "partner_accepted" : "partner_request_sent");
-      toast.success(status === "active" ? "You're now study partners" : "Request sent");
+      void track("partner_accepted");
+      toast.success(`You and ${name} are now study partners`);
       router.push("/partners");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't join. Try again.");
@@ -57,7 +55,9 @@ function Join() {
     }
   }
 
-  const ready = hydrated && name !== undefined;
+  // No code in the link means there is no one to look up.
+  const owner = code ? name : null;
+  const ready = hydrated && owner !== undefined;
   const signedIn = Boolean(account && profile);
 
   return (
@@ -66,7 +66,7 @@ function Join() {
       <main className="flex flex-1 flex-col justify-center">
         {!ready ? (
           <Loader2 className="mx-auto size-6 animate-spin text-muted-foreground" aria-label="Loading" />
-        ) : name === null ? (
+        ) : owner === null ? (
           <div className="game-card p-6 text-center">
             <h1 className="text-2xl font-semibold">That invite link isn&apos;t valid</h1>
             <p className="mt-1 text-sm text-muted-foreground">Ask your friend to send it again.</p>
@@ -79,18 +79,19 @@ function Join() {
             <span aria-hidden className="mx-auto grid size-16 place-items-center rounded-2xl bg-sky-soft text-sky">
               <Users className="size-8" />
             </span>
-            <h1 className="mt-3 text-2xl font-semibold">{name} wants to study with you</h1>
+            <h1 className="mt-3 text-2xl font-semibold">{name} invited you to study together</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Practise together, see each other&apos;s streaks and nudge each other to keep going.
             </p>
             {signedIn ? (
               <Button size="xl" className="mt-5 w-full" disabled={joining} onClick={join}>
-                {joining ? <Loader2 className="animate-spin" aria-hidden /> : `Study with ${name}`}
+                {joining ? <Loader2 className="animate-spin" aria-hidden /> : `Join ${name}`}
               </Button>
             ) : (
               <div className="mt-5 flex flex-col gap-3">
+                <p className="text-sm text-muted-foreground">Create your account and you will be study partners right away.</p>
                 <Link href="/register" className={cn(buttonVariants({ size: "xl" }), "w-full")}>
-                  Create free account
+                  Create an account to join {name}
                 </Link>
                 <Link href="/login" className={cn(buttonVariants({ size: "xl", variant: "outline" }), "w-full")}>
                   I already have an account

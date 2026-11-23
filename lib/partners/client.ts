@@ -47,6 +47,7 @@ const MESSAGES: Record<string, string> = {
   already_practised: "They've already practised today.",
   already_nudged: "You already nudged them today.",
   account_required: "Create an account to study with a friend.",
+  offline: "Something went wrong. Check your connection and try again.",
 };
 
 export async function getPartners(): Promise<Partners> {
@@ -55,20 +56,31 @@ export async function getPartners(): Promise<Partners> {
   return data as Partners;
 }
 
+/** A failed action, with the server's code so callers can tell a final answer from a dropped connection. */
+export class PartnerError extends Error {
+  constructor(
+    message: string,
+    readonly code: string,
+  ) {
+    super(message);
+  }
+}
+
 /** Actions that end in a push go through the server, which tells the other person. */
 export async function partnerAction(
-  body: { action: "request"; code: string } | { action: "respond"; id: string; accept: boolean } | { action: "nudge"; id: string } | { action: "practised" },
+  body: { action: "request"; code: string } | { action: "accept_invite"; code: string } | { action: "respond"; id: string; accept: boolean } | { action: "nudge"; id: string } | { action: "practised" },
 ): Promise<{ status: string | null }> {
   const { data } = await supabase().auth.getSession();
   const token = data.session?.access_token;
-  if (!token) throw new Error(MESSAGES.account_required);
+  if (!token) throw new PartnerError(MESSAGES.account_required, "account_required");
   const res = await fetch("/api/partners", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
-  });
+  }).catch(() => null);
+  if (!res) throw new PartnerError(MESSAGES.offline, "offline");
   const json = (await res.json().catch(() => ({}))) as { error?: string; status?: string | null };
-  if (!res.ok) throw new Error(MESSAGES[json.error ?? ""] ?? "Something went wrong. Check your connection and try again.");
+  if (!res.ok) throw new PartnerError(MESSAGES[json.error ?? ""] ?? MESSAGES.offline, json.error ?? "failed");
   return { status: json.status ?? null };
 }
 
@@ -102,3 +114,24 @@ export function whatsappInvite(code: string) {
 }
 
 export const INVITE_KEY = "jp:invite";
+
+/** A code is six letters or digits. Anything else in a link or in storage is ignored. */
+export const cleanInviteCode = (raw: unknown) => {
+  const code = String(raw ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  return code.length === 6 ? code : null;
+};
+
+/** The invite this visitor came in with, if they opened a link on this device. */
+export function savedInvite(): string | null {
+  try {
+    return cleanInviteCode(localStorage.getItem(INVITE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+/** Who an invite is from, by first name. Null when the code matches no one. */
+export async function inviterName(code: string): Promise<string | null> {
+  const { data, error } = await supabase().rpc("partner_code_owner", { p_code: code });
+  return error ? null : ((data as string | null) ?? null);
+}

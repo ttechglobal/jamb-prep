@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { track, trackOnce } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
+import { inviterName, savedInvite } from "@/lib/partners/client";
 
 type Mode = "login" | "register";
 
@@ -31,8 +32,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
   const copy = COPY[mode];
 
+  const [inviter, setInviter] = useState<string | null>(null);
+
   useEffect(() => {
     if (mode === "register") trackOnce("register_view");
+  }, [mode]);
+
+  // A friend who sent a link is named on the sign-up form, so it is clear what creating an account does.
+  useEffect(() => {
+    const code = mode === "register" ? savedInvite() : null;
+    if (code) void inviterName(code).then(setInviter);
   }, [mode]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -81,6 +90,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
     <div className="game-card p-6 sm:p-7">
       <h1 className="text-2xl font-semibold">{copy.title}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{copy.sub}</p>
+      {inviter ? (
+        <p className="mt-4 rounded-xl bg-sky-soft px-3.5 py-2.5 text-sm font-medium text-sky">
+          {inviter} invited you to study together. Create your account and you will be study partners.
+        </p>
+      ) : null}
 
       <form onSubmit={onSubmit} noValidate className="mt-6 space-y-4">
         <div className="space-y-1.5">

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { data } from "@/lib/data";
 import { emptyProgress } from "@/lib/game/rules";
 import { releaseReminders } from "@/lib/pwa/push";
+import { savedInvite } from "@/lib/partners/client";
 import { currentSession, supabase } from "@/lib/supabase/client";
 import type { PlayerProgress, Profile } from "@/lib/types";
 
@@ -103,10 +104,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const auth = supabase().auth;
         const session = await currentSession();
         const options = { emailRedirectTo: redirectTo("/onboarding") };
+        // A friend's invite goes into the account itself, so it still works when the confirmation link
+        // is opened on another browser or in an email app, where this device's storage is out of reach.
+        const invite = savedInvite();
+        const inviteData = invite ? { invite_code: invite } : undefined;
 
         // Upgrades the guest in place, so practice done before registering is kept.
         if (session?.user.is_anonymous) {
-          const { data: updated, error } = await auth.updateUser({ email, password }, options);
+          const { data: updated, error } = await auth.updateUser({ email, password, data: inviteData }, options);
           if (error) throw new Error(friendlyAuthError(error));
           if (updated.user.is_anonymous || updated.user.new_email) return "confirm_email";
           const { data: refreshed } = await auth.refreshSession();
@@ -114,7 +119,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           return "ready";
         }
 
-        const { data: created, error } = await auth.signUp({ email, password, options });
+        const { data: created, error } = await auth.signUp({ email, password, options: { ...options, data: inviteData } });
         if (error) throw new Error(friendlyAuthError(error));
         if (!created.session) return "confirm_email";
         await load(created.session);

@@ -10,6 +10,7 @@ import { adminDb } from "@/lib/admin/auth";
 
 type Action =
   | { action: "request"; code: string }
+  | { action: "accept_invite"; code: string }
   | { action: "respond"; id: string; accept: boolean }
   | { action: "nudge"; id: string }
   | { action: "practised" };
@@ -45,6 +46,9 @@ export async function POST(request: Request) {
     case "request":
       result = await db.rpc("request_partner", { p_code: String(body.code ?? "") });
       break;
+    case "accept_invite":
+      result = await db.rpc("accept_invite", { p_code: String(body.code ?? "") });
+      break;
     case "respond":
       result = await db.rpc("respond_partner", { p_id: String(body.id ?? ""), p_accept: body.accept === true });
       break;
@@ -69,7 +73,7 @@ export async function POST(request: Request) {
   if (recipients.length > 0 && out.from) {
     const kind =
       body.action === "request" ? (out.status === "active" ? "joined" : "request")
-      : body.action === "respond" ? "joined"
+      : body.action === "accept_invite" || body.action === "respond" ? "joined"
       : body.action === "nudge" ? "nudge"
       : "practised";
     // Awaited so the push is sent before the function ends, but never allowed to fail the request.
