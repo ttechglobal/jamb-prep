@@ -89,7 +89,7 @@ export default function PartnersPage() {
         <ArrowLeft className="size-4" aria-hidden /> Practice
       </Link>
       <h1 className="mt-1 text-3xl font-semibold leading-tight">Study partners</h1>
-      <p className="mt-0.5 text-muted-foreground">Practise together. See each other&apos;s streaks and nudge each other.</p>
+      <p className="mt-0.5 text-muted-foreground">Practise together. See each other&apos;s streaks and nudge each other. If a partner goes two days without practising, we&apos;ll let you know.</p>
 
       {failed ? (
         <div className="game-card mt-4 p-4 text-center">

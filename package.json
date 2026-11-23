@@ -17,7 +17,8 @@
     "mq:test": "node --disable-warning=ExperimentalWarning --test tests/*.test.mjs",
     "db:import": "node --disable-warning=ExperimentalWarning --env-file=.env.local scripts/import-questions.mjs",
     "admin:password": "node scripts/set-admin-password.mjs",
-    "reminders:setup": "node --env-file=.env.local scripts/setup-reminders.mjs"
+    "reminders:setup": "node --env-file=.env.local scripts/setup-reminders.mjs",
+    "study-reminders:setup": "node --env-file=.env.local scripts/setup-study-reminders.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

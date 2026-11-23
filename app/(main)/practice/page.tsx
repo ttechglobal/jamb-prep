@@ -5,6 +5,7 @@ import { BookOpenCheck, ChevronRight, Clock, Gamepad2, Loader2, Target, Trophy, 
 import { useState } from "react";
 import { LevelBar, SubjectIcon } from "@/components/game/game-ui";
 import { PartnerCard } from "@/components/partners/partner-card";
+import { StudyTimesPrompt } from "@/components/study/study-times";
 import { Button } from "@/components/ui/button";
 import { useStartSession } from "@/hooks/use-start-session";
 import { useAppState } from "@/lib/app-state";
@@ -76,6 +77,8 @@ export default function PracticePage() {
           </section>
 
           <PartnerCard />
+
+          <StudyTimesPrompt />
 
           <section aria-label="More practice" className="order-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-3">
             <ModeCard

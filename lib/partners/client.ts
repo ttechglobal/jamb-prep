@@ -11,6 +11,8 @@ export type Partner = {
   today: DayStatus;
   commitment: Commitment | null;
   nudgedByMe: boolean;
+  /** Days since they last practised: 0 is today. Null when they never have. */
+  daysAway: number | null;
 };
 
 export type PartnerEvent = { id: number; kind: "request" | "joined" | "nudge" | "practised"; name: string; at: string };
@@ -51,9 +53,12 @@ const MESSAGES: Record<string, string> = {
 };
 
 export async function getPartners(): Promise<Partners> {
-  const { data, error } = await supabase().rpc("get_partners");
+  const [{ data, error }, gaps] = await Promise.all([supabase().rpc("get_partners"), supabase().rpc("get_partner_gaps")]);
   if (error) throw new Error("Couldn't load your study partners.");
-  return data as Partners;
+  const result = data as Omit<Partners, "partners"> & { partners: Omit<Partner, "daysAway">[] };
+  // How long each has been away is a bonus: the list still shows if it can't be read.
+  const away = (gaps.error ? {} : (gaps.data ?? {})) as Record<string, { days: number | null }>;
+  return { ...result, partners: result.partners.map((p) => ({ ...p, daysAway: away[p.userId]?.days ?? null })) };
 }
 
 /** A failed action, with the server's code so callers can tell a final answer from a dropped connection. */

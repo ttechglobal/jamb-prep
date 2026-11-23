@@ -20,6 +20,8 @@ export function PartnerRow({ partner, onChanged, trailing }: { partner: Partner;
   const [nudged, setNudged] = useState(partner.nudgedByMe);
   const commitment = commitmentLabel(partner.commitment);
   const canNudge = partner.today !== "done";
+  // From the second day away, the plain "hasn't practised yet" gives way to how long it has been.
+  const away = partner.today !== "done" && partner.daysAway !== null && partner.daysAway >= 2 ? partner.daysAway : null;
 
   async function nudge() {
     setBusy(true);
@@ -56,7 +58,7 @@ export function PartnerRow({ partner, onChanged, trailing }: { partner: Partner;
           </span>
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          {STATUS[partner.today]}
+          {away ? <span className="font-semibold text-destructive">Hasn&apos;t practised in {away} days</span> : STATUS[partner.today]}
           {commitment ? ` · Promised ${commitment.toLowerCase()}` : ""}
         </p>
       </div>

@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SubjectIcon } from "@/components/game/game-ui";
 import { DeviceSettings } from "@/components/pwa/device-settings";
+import { StudyTimes } from "@/components/study/study-times";
 import { SubjectPicker, isValidSubjectSelection } from "@/components/profile/subject-picker";
 import { SubjectTargets } from "@/components/profile/subject-targets";
 import { Button } from "@/components/ui/button";
@@ -147,6 +148,8 @@ function SettingsForm({ email, profile, startWith }: { email: string; profile: P
           </>
         )}
       </section>
+
+      <StudyTimes />
 
       <DeviceSettings />
 
