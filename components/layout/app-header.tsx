@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { isGameSession } from "@/lib/games/session-route";
 import { Logo } from "@/components/brand/logo";
 import { StreakPill, XpPill } from "@/components/game/game-ui";
 import { useAppState } from "@/lib/app-state";
@@ -20,6 +21,7 @@ export function AppHeader() {
   const pathname = usePathname();
   const { profile, progress } = useAppState();
   const initial = (profile?.displayName || "?").charAt(0).toUpperCase();
+  if (isGameSession(pathname)) return null;
 
   return (
     <header className="sticky top-0 z-30 border-b-2 bg-background/95 backdrop-blur">

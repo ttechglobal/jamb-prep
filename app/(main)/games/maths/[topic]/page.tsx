@@ -69,7 +69,7 @@ function LevelMap({ topicId, name, tagline }: { topicId: string; name: string; t
           );
         })}
       </ol>
-      <p className="mt-4 text-center text-sm text-muted-foreground">Earn a star to open the next level. Three stars on every level, including Solve it, makes you an expert.</p>
+      <p className="mt-4 text-center text-sm text-muted-foreground">Get 3 out of 5 right to earn a star and open the next level. Three stars on every level, including Solve it, makes you an expert.</p>
     </div>
   );
 }

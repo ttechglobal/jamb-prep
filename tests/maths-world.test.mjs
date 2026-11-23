@@ -152,3 +152,65 @@ test("every puzzle's own final line is accepted as its answer", async () => {
   for (const p of PUZZLES) assert.ok(checkAnswer(last(p), last(p)), `${p.id}: ${last(p)}`);
 });
 
+
+test("every level can be made from every puzzle that suits it", async () => {
+  const { MATHS_LEVELS, makeItem } = await import("../lib/games/maths/engine.ts");
+  for (const level of MATHS_LEVELS) {
+    let made = 0;
+    for (const p of PUZZLES) {
+      for (let t = 0; t < 4; t++) {
+        const item = makeItem(p, level);
+        if (!item) continue;
+        made++;
+        for (const g of item.gaps) {
+          if (g.mode === "pick") {
+            assert.ok(g.options.length >= 3, `${p.id}/${level.id}: too few tiles`);
+            assert.equal(g.options.filter((o) => o.join("\n") === g.answer.join("\n")).length, 1, `${p.id}/${level.id}: the right tile must appear exactly once`);
+            assert.equal(new Set(g.options.map((o) => o.length)).size, 1, `${p.id}/${level.id}: tiles differ in size`);
+          }
+          if (g.mode === "order") {
+            assert.equal([...g.shuffled].sort((a, b) => a - b).join(), p.steps.map((_, i) => i).join());
+            assert.ok(g.shuffled.some((v, i) => v !== i), `${p.id}: order is already right`);
+          }
+          if (g.mode === "why") {
+            assert.ok(g.whyOptions.includes(p.steps[g.step].title));
+            assert.ok(g.whyOptions.length >= 3 && g.step >= 1);
+            assert.equal(new Set(g.whyOptions).size, g.whyOptions.length);
+          }
+          if (g.mode === "spot") {
+            if (g.spot.mistake === null) assert.deepEqual(g.spot.shown, p.steps);
+            else assert.notEqual(g.spot.shown[g.spot.mistake].lines[0], p.steps[g.spot.mistake].lines[0], `${p.id}: the altered line equals the right one`);
+          }
+        }
+      }
+    }
+    assert.ok(made > 0, `${level.id} made nothing`);
+  }
+});
+
+test("a topic can fill every level of its ladder", async () => {
+  const { MATHS_LEVELS, TOPICS, drawItems } = await import("../lib/games/maths/engine.ts");
+  for (const t of TOPICS) for (const l of MATHS_LEVELS) assert.equal(drawItems(t.id, l.id).length, 5, `${t.id}/${l.id} has fewer than five questions`);
+});
+
+test("stars: three of five earns the first star", async () => {
+  const { mathsStars, rightForFirstStar, masteryOf, MATHS_LEVELS } = await import("../lib/games/maths/engine.ts");
+  assert.deepEqual([0, 1, 2, 3, 4, 5].map((r) => mathsStars(r, 5)), [0, 0, 0, 1, 2, 3]);
+  assert.equal(rightForFirstStar(5), 3);
+  assert.equal(mathsStars(6, 10), 1);
+  assert.equal(mathsStars(0, 0), 0);
+  const all = Object.fromEntries(MATHS_LEVELS.map((l) => [l.id, 3]));
+  assert.equal(masteryOf({}).label, "Not started");
+  assert.equal(masteryOf({ "pick-one": 1 }).label, "Still coming up");
+  assert.equal(masteryOf(all).label, "Expert");
+  assert.notEqual(masteryOf({ ...all, solve: 0 }).label, "Expert");
+});
+
+test("topics run from gentle to demanding", async () => {
+  const { TOPICS } = await import("../lib/games/maths/engine.ts");
+  const ids = TOPICS.map((t) => t.id);
+  assert.equal(ids[0], "fractions");
+  assert.ok(ids.indexOf("fractions") < ids.indexOf("indices"));
+  assert.ok(ids.indexOf("indices") < ids.indexOf("simultaneous"));
+  assert.equal(ids.at(-1), "quadratics");
+});

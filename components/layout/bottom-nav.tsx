@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { isGameSession } from "@/lib/games/session-route";
 import { cn } from "@/lib/utils";
 
 const INK = "#1F2937";
@@ -69,11 +70,10 @@ const TABS = [
 ];
 
 /** While someone is playing a game level the bar steps aside, like it does in a practice round. */
-const HIDDEN_ON = [/^\/games\/concord\/[^/]+/, /^\/games\/play\/[^/]+\/[^/]+/];
 
 export function BottomNav() {
   const pathname = usePathname();
-  if (HIDDEN_ON.some((re) => re.test(pathname))) return null;
+  if (isGameSession(pathname)) return null;
 
   return (
     <nav

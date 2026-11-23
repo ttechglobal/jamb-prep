@@ -1,4 +1,4 @@
-import { PUZZLES, TOPICS, type Puzzle, type Step, type Topic } from "./families";
+import { PUZZLES, TOPICS, type Puzzle, type Step, type Topic } from "./families.ts";
 
 export { PUZZLES, TOPICS };
 export type { Puzzle, Step, Topic };
@@ -23,7 +23,7 @@ export interface MathsLevel {
   title: string;
   blurb: string;
   /** What the student does at each gap. */
-  mode: "pick" | "build" | "answer";
+  mode: "pick" | "build" | "answer" | "order" | "why" | "spot";
   /** How many gaps. "all" leaves every line after the first as a gap (up to four). */
   gaps: 1 | 2 | "all";
   /** Whether the heading of a gapped line is shown while the student answers. */
@@ -31,20 +31,39 @@ export interface MathsLevel {
   lesson: string;
 }
 
+/** Easiest first. A level opens when the one before has a star. */
 export const MATHS_LEVELS: MathsLevel[] = [
   {
     id: "pick-one",
     title: "Finish the line",
-    blurb: "The working stops at one gap. Pick the line that belongs.",
+    blurb: "One line of the working is missing. Pick the line that fits.",
     mode: "pick",
     gaps: 1,
     showHeading: true,
-    lesson: "Read the heading and the line above the gap. Ask what was done to get the next line.",
+    lesson: "Every line has a heading that says what the step does. Read the heading, look at the line above the gap, then pick the line that shows the step done.",
+  },
+  {
+    id: "order",
+    title: "Put in order",
+    blurb: "The steps are jumbled. Tap them in the order you would do them.",
+    mode: "order",
+    gaps: 1,
+    showHeading: false,
+    lesson: "Start with the line that restates the question. Each line should make the next one possible, all the way to the answer.",
+  },
+  {
+    id: "why",
+    title: "Name the step",
+    blurb: "You see two lines. Pick what was done to get from the first to the second.",
+    mode: "why",
+    gaps: 1,
+    showHeading: false,
+    lesson: "Compare the two lines. What changed? Naming the move helps you use it in another question.",
   },
   {
     id: "pick-two",
     title: "Keep going",
-    blurb: "The working stops twice. The second gap depends on the first.",
+    blurb: "Two lines are missing. The second one depends on the first.",
     mode: "pick",
     gaps: 2,
     showHeading: true,
@@ -53,16 +72,25 @@ export const MATHS_LEVELS: MathsLevel[] = [
   {
     id: "build",
     title: "Build the line",
-    blurb: "No tiles to choose from. Build the line piece by piece.",
+    blurb: "The next line is missing and there are no choices. Build it from the pieces.",
     mode: "build",
     gaps: 1,
     showHeading: true,
-    lesson: "Do the step in your head first, then pick the pieces. Watch your signs.",
+    lesson: "Do the step in your head first, then tap the pieces in order. Watch your signs.",
+  },
+  {
+    id: "spot",
+    title: "Spot the mistake",
+    blurb: "Read the working. One line may be wrong, or every line may be right.",
+    mode: "spot",
+    gaps: 1,
+    showHeading: false,
+    lesson: "Check each line against the heading above it. Does it do exactly what the heading says?",
   },
   {
     id: "no-hints",
     title: "No hints",
-    blurb: "Every line is a gap and the headings are hidden until you answer.",
+    blurb: "Every line after the first is missing, and the headings are hidden. Build each one.",
     mode: "build",
     gaps: "all",
     showHeading: false,
@@ -78,7 +106,6 @@ export const MATHS_LEVELS: MathsLevel[] = [
     lesson: "Use paper if you need it. Write fractions like 1/2, and if there are two answers, write both.",
   },
 ];
-
 export const ITEMS_PER_PLAY = 5;
 
 export const levelById = (id: string) => MATHS_LEVELS.find((l) => l.id === id);
@@ -133,7 +160,7 @@ export function perturb(tex: string): string[] {
 export interface Gap {
   /** Index of the step left empty. */
   step: number;
-  mode: "pick" | "build" | "answer";
+  mode: "pick" | "build" | "answer" | "order" | "why" | "spot";
   /** The correct lines of the step. */
   answer: string[];
   /** Why the author's slip is wrong, shown when the student makes a mistake on the step it was written for. */
@@ -142,6 +169,12 @@ export interface Gap {
   options: string[][];
   /** build: the pieces to use, the right ones and two strays. */
   pieces: string[];
+  /** order: the steps in the order first shown, which is never the right order. */
+  shuffled?: number[];
+  /** why: what was done, with the wrong ideas mixed in. */
+  whyOptions?: string[];
+  /** spot: the working as shown, and which line was altered (null when every line is right). */
+  spot?: { shown: Step[]; mistake: number | null };
 }
 
 export interface Item {
@@ -207,7 +240,36 @@ function chooseStops(p: Puzzle, level: MathsLevel): number[] {
   return [first, second].sort((x, y) => x - y);
 }
 
+function extraGap(p: Puzzle, mode: "order" | "why" | "spot"): Gap | null {
+  const d = p.design;
+  const base = { step: 0, answer: [] as string[], explain: null, options: [] as string[][], pieces: [] as string[] };
+  if (mode === "order") {
+    // Two identical lines could not be told apart.
+    if (new Set(p.steps.map((s) => key(s.lines))).size !== p.steps.length) return null;
+    const idx = p.steps.map((_, i) => i);
+    for (let t = 0; t < 20; t++) {
+      const s = shuffle(idx);
+      if (s.some((v, i) => v !== i)) return { ...base, mode, shuffled: s };
+    }
+    return null;
+  }
+  if (mode === "why") {
+    const right = p.steps[d.whyStep].title;
+    const options = [right, ...d.ruleDistractors.filter((o) => o !== right)];
+    if (options.length < 3) return null;
+    return { ...base, mode, step: d.whyStep, whyOptions: shuffle(options) };
+  }
+  // About one working in four is shown correct, so "no mistake" is sometimes the right answer.
+  if (Math.random() < 0.25) return { ...base, mode, spot: { shown: p.steps, mistake: null } };
+  const shown = p.steps.map((s, i) => (i === d.mistakeStep ? { title: s.title, lines: [d.wrongLine] } : s));
+  return { ...base, mode, step: d.mistakeStep, spot: { shown, mistake: d.mistakeStep } };
+}
+
 export function makeItem(p: Puzzle, level: MathsLevel): Item | null {
+  if (level.mode === "order" || level.mode === "why" || level.mode === "spot") {
+    const gap = extraGap(p, level.mode);
+    return gap ? { puzzle: p, gaps: [gap], showHeading: false } : null;
+  }
   if (level.mode === "answer") {
     // Only the question is shown. The last line of the working is the answer.
     const step = p.steps.length - 1;
@@ -241,7 +303,7 @@ export function drawItems(topicId: string, levelId: string, n = ITEMS_PER_PLAY):
 export const sameLines = (a: string[], b: string[]) => key(a) === key(b);
 export const sameBuild = (pieces: string[], tex: string) => pieces.join(" ") === tokenize(tex).join(" ");
 
-export { checkAnswer } from "./answer";
+export { checkAnswer } from "./answer.ts";
 
 // ---- how well a student knows a topic ----
 
@@ -257,11 +319,30 @@ export interface Mastery {
 
 export function masteryOf(stars: Record<string, number>): Mastery {
   const total = MATHS_LEVELS.reduce((sum, l) => sum + Math.min(3, stars[l.id] ?? 0), 0);
+  const max = STARS_PER_TOPIC;
   // Expert needs the last level at three stars as well: the student can do the whole question alone.
   const solved = (stars.solve ?? 0) >= 3;
-  if (total === 0) return { stars: total, max: STARS_PER_TOPIC, label: "Not started", rank: 0 };
-  if (total >= STARS_PER_TOPIC - 1 && solved) return { stars: total, max: STARS_PER_TOPIC, label: "Expert", rank: 4 };
-  if (total >= 10) return { stars: total, max: STARS_PER_TOPIC, label: "Strong", rank: 3 };
-  if (total >= 5) return { stars: total, max: STARS_PER_TOPIC, label: "Getting there", rank: 2 };
-  return { stars: total, max: STARS_PER_TOPIC, label: "Still coming up", rank: 1 };
+  if (total === 0) return { stars: total, max, label: "Not started", rank: 0 };
+  if (total >= max - 2 && solved) return { stars: total, max, label: "Expert", rank: 4 };
+  if (total >= (max * 2) / 3) return { stars: total, max, label: "Strong", rank: 3 };
+  if (total >= max / 3) return { stars: total, max, label: "Getting there", rank: 2 };
+  return { stars: total, max, label: "Still coming up", rank: 1 };
+}
+
+/** Stars for a level: three out of five right earns the first star, four the second, all five the third. */
+export function mathsStars(right: number, total: number): 0 | 1 | 2 | 3 {
+  if (total <= 0) return 0;
+  const pct = (right / total) * 100;
+  if (pct >= 100) return 3;
+  if (pct >= 80) return 2;
+  if (pct >= 60) return 1;
+  return 0;
+}
+
+/** How many right it takes to earn the first star. */
+export const rightForFirstStar = (total: number) => Math.ceil(total * 0.6);
+
+/** Whether what the student chose is the author's wrong line for this working: a slip with a known reason. */
+export function matchesSlip(p: Puzzle, said: string[]): boolean {
+  return said.length === 1 && norm(said[0]) === norm(p.design.wrongLine);
 }

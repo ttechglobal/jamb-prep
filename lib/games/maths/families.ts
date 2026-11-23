@@ -47,20 +47,19 @@ export interface Topic {
   place: string;
 }
 
-/** Ordered by how often JAMB candidates lose marks on them, most troublesome first. */
+/** Ordered as a progression: the gentlest first, the most demanding last. */
 export const TOPICS: Topic[] = [
-  { id: "simultaneous", name: "Simultaneous equations", tagline: "Add or subtract to eliminate a letter, then substitute back.", place: "Twin Rivers" },
-  { id: "quadratics", name: "Quadratic equations", tagline: "Factorise, set each bracket to zero, and watch the signs.", place: "Quadratic Quarry" },
-  { id: "indices", name: "Indices", tagline: "Equal bases, equal powers. Roots and fractional powers.", place: "Power Peaks" },
-  { id: "logs", name: "Logarithms", tagline: "Adding logs multiplies. Switch between log and index form.", place: "Logarithm Lake" },
-  { id: "variation", name: "Variation", tagline: "Find the constant k first, then use it.", place: "Constant Canyon" },
-  { id: "percent", name: "Percentages, discount and profit", tagline: "Percentage of what? Discount, profit and the right base.", place: "Market Square" },
   { id: "fractions", name: "Fractions", tagline: "Common denominators, and what is left over.", place: "Fraction Falls" },
+  { id: "percent", name: "Percentages, discount and profit", tagline: "Percentage of what? Discount, profit and the right base.", place: "Market Square" },
   { id: "linear", name: "Linear equations", tagline: "Keep the balance: do the same to both sides.", place: "Balance Bridge" },
-  { id: "bases", name: "Number bases", tagline: "Binary to base ten and back again.", place: "Binary Beach" },
   { id: "mensuration", name: "Perimeter and area", tagline: "Pick the right formula and substitute carefully.", place: "Shape Studio" },
+  { id: "bases", name: "Number bases", tagline: "Binary to base ten and back again.", place: "Binary Beach" },
+  { id: "variation", name: "Variation", tagline: "Find the constant k first, then use it.", place: "Constant Canyon" },
+  { id: "indices", name: "Indices", tagline: "Equal bases, equal powers. Roots and fractional powers.", place: "Power Peaks" },
+  { id: "simultaneous", name: "Simultaneous equations", tagline: "Add or subtract to eliminate a letter, then substitute back.", place: "Twin Rivers" },
+  { id: "logs", name: "Logarithms", tagline: "Adding logs multiplies. Switch between log and index form.", place: "Logarithm Lake" },
+  { id: "quadratics", name: "Quadratic equations", tagline: "Factorise, set each bracket to zero, and watch the signs.", place: "Quadratic Quarry" },
 ];
-
 const pow = (b: number, p: number) => b ** p;
 const div = (a: number, b: number) => Math.trunc(a / b);
 
