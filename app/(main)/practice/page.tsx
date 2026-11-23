@@ -5,7 +5,6 @@ import { BookOpenCheck, ChevronRight, Clock, Gamepad2, Loader2, Target, Trophy, 
 import { useState } from "react";
 import { LevelBar, SubjectIcon } from "@/components/game/game-ui";
 import { PartnerCard } from "@/components/partners/partner-card";
-import { WorkOnThis } from "@/components/practice/work-on-this";
 import { Button } from "@/components/ui/button";
 import { useStartSession } from "@/hooks/use-start-session";
 import { useAppState } from "@/lib/app-state";
@@ -75,8 +74,6 @@ export default function PracticePage() {
               })}
             </ul>
           </section>
-
-          <WorkOnThis />
 
           <PartnerCard />
 

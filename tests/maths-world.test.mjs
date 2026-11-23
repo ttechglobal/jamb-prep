@@ -5,6 +5,8 @@ import { PUZZLES, TOPICS } from "../lib/games/maths/families.ts";
 
 const ids = (p) => p.id.split("-").map(Number).filter((n) => !Number.isNaN(n));
 const last = (p) => p.steps.at(-1).lines[0];
+/** The first paragraph of the question, with each formula written out. */
+const stemText = (p) => p.stem[0].content.map((c) => c.text ?? c.math).join("");
 const byPrefix = (prefix) => PUZZLES.filter((p) => p.id.startsWith(prefix));
 
 test("every topic has puzzles and every puzzle has a known topic", () => {
@@ -29,16 +31,16 @@ test("linear equations give the stated x", () => {
   for (const p of byPrefix("balance-")) {
     const [a, b, x] = ids(p);
     assert.equal(last(p), `x=${x}`);
-    assert.match(p.stem[0].content[0].text, new RegExp(`${a}x \\+ ${b} = ${a * x + b}`));
+    assert.match(stemText(p), new RegExp(`${a}x \\+ ${b} = ${a * x + b}`));
   }
   for (const p of byPrefix("expand-")) {
     const [a, b, c, x] = ids(p);
-    assert.match(p.stem[0].content[0].text, new RegExp(`${a}\\(x \\+ ${b}\\) \\+ ${c} = ${a * (x + b) + c}`));
+    assert.match(stemText(p), new RegExp(`${a}\\(x \\+ ${b}\\) \\+ ${c} = ${a * (x + b) + c}`));
     assert.equal(last(p), `x=${x}`);
   }
   for (const p of byPrefix("both-sides-")) {
     const [a, c, x, b] = ids(p);
-    assert.match(p.stem[0].content[0].text, new RegExp(`${a}x \\+ ${b} = ${c}x \\+ ${(a - c) * x + b}`));
+    assert.match(stemText(p), new RegExp(`${a}x \\+ ${b} = ${c}x \\+ ${(a - c) * x + b}`));
     assert.equal(last(p), `x=${x}`);
   }
 });
@@ -117,7 +119,7 @@ test("variation, percentages, fractions, bases and mensuration", () => {
   for (const p of byPrefix("rectangle-")) {
     const [l, w] = ids(p);
     assert.equal(last(p), `w=${w}`);
-    assert.match(p.stem[0].content[0].text, new RegExp(`perimeter ${2 * (l + w)} cm`));
+    assert.match(stemText(p), new RegExp(`perimeter ${2 * (l + w)} cm`));
   }
   for (const p of byPrefix("trapezium-")) {
     const [a, b, h] = ids(p);
@@ -213,4 +215,15 @@ test("topics run from gentle to demanding", async () => {
   assert.ok(ids.indexOf("fractions") < ids.indexOf("indices"));
   assert.ok(ids.indexOf("indices") < ids.indexOf("simultaneous"));
   assert.equal(ids.at(-1), "quadratics");
+});
+
+test("questions typeset their formulas and leave no stray markers", () => {
+  for (const p of PUZZLES) {
+    const parts = p.stem[0].content;
+    assert.ok(parts.some((c) => "math" in c) || p.stem.some((b) => b.type === "math"), `${p.id}: the question has no typeset formula`);
+    for (const c of parts) assert.ok(!("text" in c) || !/[⟦⟧]/.test(c.text), `${p.id}: a marker was left in the text`);
+    assert.ok(parts.every((c) => !("math" in c) || c.math.trim() !== ""), `${p.id}: an empty formula`);
+  }
+  const quadratic = PUZZLES.find((p) => p.id.startsWith("quadratic-"));
+  assert.equal(quadratic.stem[0].content.length, 1, "a question with its formula on its own line stays plain");
 });

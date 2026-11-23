@@ -4,6 +4,7 @@ import { ArrowLeft, Lock, Star } from "lucide-react";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { MasteryBadge } from "@/components/games/mastery-badge";
+import { LevelIcon, TopicIcon } from "@/components/games/maths-icons";
 import { MATHS_LEVELS, masteryOf, topicById } from "@/lib/games/maths/engine";
 import { isUnlocked, useQuizProgress } from "@/lib/games/quiz/progress";
 import { cn } from "@/lib/utils";
@@ -28,20 +29,23 @@ function LevelMap({ topicId, name, tagline }: { topicId: string; name: string; t
         <ArrowLeft className="size-5" aria-hidden />
         Maths World
       </Link>
-      <header className="mb-5">
-        <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">{name}</h1>
-        <p className="mt-0.5 text-muted-foreground">{tagline}</p>
-        {ready ? <MasteryBadge mastery={mastery} className="mt-3" /> : null}
+      <header className="mb-5 flex items-start gap-3">
+        <TopicIcon topicId={topicId} className="size-16" iconClassName="size-8" />
+        <div className="min-w-0">
+          <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">{name}</h1>
+          <p className="mt-0.5 text-muted-foreground">{tagline}</p>
+          {ready ? <MasteryBadge mastery={mastery} className="mt-3" /> : null}
+        </div>
       </header>
 
       <ol className="flex flex-col gap-3">
-        {MATHS_LEVELS.map((level, i) => {
+        {MATHS_LEVELS.map((level) => {
           const stars = progress.stars[level.id] ?? 0;
           const open = isUnlocked(asGame, progress, level.id);
           const inner = (
             <>
-              <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-2xl bg-secondary font-display text-xl font-semibold text-primary">
-                {open ? i + 1 : <Lock className="size-5 text-muted-foreground" />}
+              <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-2xl bg-secondary text-primary">
+                {open ? <LevelIcon levelId={level.id} /> : <Lock className="size-5 text-muted-foreground" />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-display text-xl font-semibold leading-tight">{level.title}</span>

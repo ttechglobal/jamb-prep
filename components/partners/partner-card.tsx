@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Users } from "lucide-react";
+import { ChevronRight, UserPlus, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { PartnerRow } from "@/components/partners/partner-row";
 import { Button } from "@/components/ui/button";
 import { useAppState } from "@/lib/app-state";
 import { getPartners, markEventsRead, type PartnerEvent, type Partners } from "@/lib/partners/client";
+
+/** The most study partners one student can have. The database enforces the same limit. */
+const MAX_PARTNERS = 5;
 
 const EVENT_TEXT: Record<PartnerEvent["kind"], (name: string) => string> = {
   request: (n) => `${n} wants to study with you`,
@@ -99,6 +102,14 @@ export function PartnerCard() {
             <PartnerRow key={p.id} partner={p} onChanged={load} />
           ))}
         </ul>
+      ) : null}
+
+      {/* Up to five study partners: the card keeps offering one more until the limit. */}
+      {state.partners.length + state.outgoing.length < MAX_PARTNERS ? (
+        <Link href="/partners" className="mt-3 flex min-h-11 items-center justify-center gap-1.5 rounded-xl border-2 border-dashed px-3 text-sm font-semibold text-primary hover:bg-secondary">
+          <UserPlus className="size-4" aria-hidden />
+          Add another study partner
+        </Link>
       ) : null}
     </section>
   );

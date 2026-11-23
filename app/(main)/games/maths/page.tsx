@@ -3,6 +3,7 @@
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { MasteryBadge } from "@/components/games/mastery-badge";
+import { TopicIcon } from "@/components/games/maths-icons";
 import { TOPICS, masteryOf, type Topic } from "@/lib/games/maths/engine";
 import { useQuizProgress } from "@/lib/games/quiz/progress";
 
@@ -36,6 +37,7 @@ function TopicCard({ topic }: { topic: Topic }) {
       href={`/games/maths/${topic.id}`}
       className="game-card game-tap flex items-center gap-3 p-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
+      <TopicIcon topicId={topic.id} className="size-14" iconClassName="size-7" />
       <span className="min-w-0 flex-1">
         <span className="block font-display text-xl font-semibold leading-tight">{topic.name}</span>
         <span className="mt-0.5 block text-sm text-muted-foreground">{topic.tagline}</span>

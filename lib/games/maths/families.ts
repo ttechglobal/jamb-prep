@@ -1,4 +1,4 @@
-import type { Block } from "@/lib/content/types";
+import type { Block, Inline } from "@/lib/content/types";
 
 /**
  * The designed Maths World puzzles. A port of the Flutter app's maths_game_puzzles.dart and maths_topics.dart,
@@ -80,13 +80,21 @@ interface Spec {
   nextStep?: number;
 }
 
+/** Plain words with formulas marked ⟦like this⟧, so letters and equations are typeset as maths. */
+function inline(text: string): Inline[] {
+  return text
+    .split(/⟦(.*?)⟧/)
+    .map((part, i): Inline => (i % 2 === 1 ? { math: part } : { text: part }))
+    .filter((part) => !("text" in part) || part.text !== "");
+}
+
 function make(s: Spec): Puzzle {
   const middle = s.working.length - 2;
   return {
     id: s.id,
     topic: s.topic,
     stem: [
-      { type: "paragraph", content: [{ text: s.prompt }] },
+      { type: "paragraph", content: inline(s.prompt) },
       ...(s.promptMath ? ([{ type: "math", tex: s.promptMath }] as Block[]) : []),
     ],
     steps: s.working.map(([title, tex]) => ({ title, lines: [tex] })),
@@ -112,7 +120,7 @@ function equation(a: number, b: number, x: number) {
   return make({
     topic: "linear",
     id: `balance-${a}-${b}-${x}`,
-    prompt: `Solve ${a}x + ${b} = ${total} for x.`,
+    prompt: `Solve ⟦${a}x + ${b} = ${total}⟧ for ⟦x⟧.`,
     working: [
       ["Start with the equation", `${a}x+${b}=${total}`],
       [`Subtract ${b} from both sides`, `${a}x=${product}`],
@@ -135,7 +143,7 @@ function expand(a: number, b: number, c: number, x: number) {
   return make({
     topic: "linear",
     id: `expand-${a}-${b}-${c}-${x}`,
-    prompt: `Solve ${a}(x + ${b}) + ${c} = ${total} for x.`,
+    prompt: `Solve ⟦${a}(x + ${b}) + ${c} = ${total}⟧ for ⟦x⟧.`,
     working: [
       ["Start with the equation", `${a}(x+${b})+${c}=${total}`],
       [`Multiply both terms in the bracket by ${a}`, `${a}x+${constant}+${c}=${total}`],
@@ -159,7 +167,7 @@ function bothSides(a: number, c: number, x: number, b: number) {
   return make({
     topic: "linear",
     id: `both-sides-${a}-${c}-${x}-${b}`,
-    prompt: `Solve ${a}x + ${b} = ${c}x + ${d} for x.`,
+    prompt: `Solve ⟦${a}x + ${b} = ${c}x + ${d}⟧ for ⟦x⟧.`,
     working: [
       ["Start with the equation", `${a}x+${b}=${c}x+${d}`],
       [`Subtract ${c}x from both sides`, `${diff}x+${b}=${d}`],
@@ -186,7 +194,7 @@ function simultaneous(x: number, y: number) {
   return make({
     topic: "simultaneous",
     id: `simultaneous-${x}-${y}`,
-    prompt: `Solve the simultaneous equations x + y = ${sum} and x − y = ${diff}.`,
+    prompt: `Solve the simultaneous equations ⟦x + y = ${sum}⟧ and ⟦x - y = ${diff}⟧.`,
     working: [
       ["Label the two equations", `x+y=${sum}\\quad x-y=${diff}`],
       ["Add the equations to eliminate y", `2x=${sum + diff}`],
@@ -242,7 +250,7 @@ function indexEquation(b: number, k: number, c: number) {
   return make({
     topic: "indices",
     id: `index-equation-${b}-${k}-${c}`,
-    prompt: "Solve for x.",
+    prompt: "Solve for ⟦x⟧.",
     promptMath: `${b}^{x+${c}}=${n}`,
     working: [
       ["Start with the equation", `${b}^{x+${c}}=${n}`],
@@ -270,7 +278,7 @@ function fractionalIndex(r: number, n: number, p: number) {
   return make({
     topic: "indices",
     id: `fractional-index-${r}-${n}-${p}`,
-    prompt: "Evaluate the expression without a calculator. Call the answer E.",
+    prompt: "Evaluate the expression without a calculator. Call the answer ⟦E⟧.",
     promptMath: `E=${big}^{${p}/${n}}`,
     working: [
       ["Write the expression", `E=${big}^{${p}/${n}}`],
@@ -303,7 +311,7 @@ function logSum(a: number, b: number) {
   return make({
     topic: "logs",
     id: `log-sum-${a}-${b}`,
-    prompt: "Simplify without a calculator (log means log to base 10). Call the answer L.",
+    prompt: "Simplify without a calculator (log means log to base 10). Call the answer ⟦L⟧.",
     promptMath: `L=\\log ${a}+\\log ${b}`,
     working: [
       ["Write the expression", `L=\\log ${a}+\\log ${b}`],
@@ -329,7 +337,7 @@ function logEquation(b: number, k: number) {
   return make({
     topic: "logs",
     id: `log-equation-${b}-${k}`,
-    prompt: "Solve for x.",
+    prompt: "Solve for ⟦x⟧.",
     promptMath: `\\log_{${b}}x=${k}`,
     working: [
       ["Start with the equation", `\\log_{${b}}x=${k}`],
@@ -356,7 +364,7 @@ function directVariation(k: number, x1: number, x2: number) {
   return make({
     topic: "variation",
     id: `direct-variation-${k}-${x1}-${x2}`,
-    prompt: `y varies directly as x. When x = ${x1}, y = ${y1}. Find y when x = ${x2}.`,
+    prompt: `⟦y⟧ varies directly as ⟦x⟧. When ⟦x = ${x1}⟧, ⟦y = ${y1}⟧. Find ⟦y⟧ when ⟦x = ${x2}⟧.`,
     working: [
       ["Write the variation as an equation", "y=kx"],
       ["Substitute the first values", `${y1}=k\\times${x1}`],
@@ -382,7 +390,7 @@ function inverseVariation(x1: number, y1: number, x2: number) {
   return make({
     topic: "variation",
     id: `inverse-variation-${x1}-${y1}-${x2}`,
-    prompt: `y varies inversely as x. When x = ${x1}, y = ${y1}. Find y when x = ${x2}.`,
+    prompt: `⟦y⟧ varies inversely as ⟦x⟧. When ⟦x = ${x1}⟧, ⟦y = ${y1}⟧. Find ⟦y⟧ when ⟦x = ${x2}⟧.`,
     working: [
       ["Write the variation as an equation", "y=\\frac{k}{x}"],
       ["Substitute the first values", `${y1}=\\frac{k}{${x1}}`],
@@ -410,7 +418,7 @@ function percentage(rate: number, base: number) {
   return make({
     topic: "percent",
     id: `percentage-${rate}-${base}`,
-    prompt: `Find ${rate}% of ${base}. Call the answer P.`,
+    prompt: `Find ${rate}% of ${base}. Call the answer ⟦P⟧.`,
     working: [
       ["Write the percentage to find", `P=${rate}\\%\\text{ of }${base}`],
       [`Rewrite ${rate}% as one part out of ${divisor}`, `P=${base}\\div${divisor}`],
@@ -431,7 +439,7 @@ function discount(rate: number, price: number) {
   return make({
     topic: "percent",
     id: `discount-${rate}-${price}`,
-    prompt: `A bag costs ₦${price} before a ${rate}% discount. Find the sale price S, using D for the discount amount.`,
+    prompt: `A bag costs ₦${price} before a ${rate}% discount. Find the sale price ⟦S⟧, using ⟦D⟧ for the discount amount.`,
     working: [
       ["Find the discount amount first", `D=${rate}\\%\\text{ of }${price}`],
       ["Rewrite the percentage as a division", `D=${price}\\div${divisor}`],
@@ -453,7 +461,7 @@ function profit(cost: number, rate: number) {
   return make({
     topic: "percent",
     id: `profit-${cost}-${rate}`,
-    prompt: `A trader buys a radio for ₦${cost} and sells it for ₦${sell}. Find the percentage profit, R.`,
+    prompt: `A trader buys a radio for ₦${cost} and sells it for ₦${sell}. Find the percentage profit, ⟦R⟧.`,
     working: [
       ["Profit is selling price minus cost price", `P=${sell}-${cost}`],
       ["Calculate the profit", `P=${gain}`],
@@ -484,7 +492,7 @@ function fractions(denominator: number, scale: number) {
   return make({
     topic: "fractions",
     id: `fractions-${denominator}-${scale}`,
-    prompt: `Add 1/${denominator} and 1/${other}. Call the sum S.`,
+    prompt: `Add ⟦\\frac{1}{${denominator}}⟧ and ⟦\\frac{1}{${other}}⟧. Call the sum ⟦S⟧.`,
     working: [
       ["Write the sum", `S=\\frac{1}{${denominator}}+\\frac{1}{${other}}`],
       [`Rewrite both fractions with denominator ${denominator}`, `S=\\frac{1}{${denominator}}+\\frac{${scale}}{${denominator}}`],
@@ -508,7 +516,7 @@ function fractionLeft(a: number, b: number) {
   return make({
     topic: "fractions",
     id: `fraction-left-${a}-${b}`,
-    prompt: `A man spends 1/${a} of his money on rent and 1/${b} on food. What fraction is left? Call it L.`,
+    prompt: `A man spends ⟦\\frac{1}{${a}}⟧ of his money on rent and ⟦\\frac{1}{${b}}⟧ on food. What fraction is left? Call it ⟦L⟧.`,
     working: [
       ["Add the fractions spent", `S=\\frac{1}{${a}}+\\frac{1}{${b}}`],
       ["Use a common denominator", `S=\\frac{${b}}{${ab}}+\\frac{${a}}{${ab}}`],
@@ -543,7 +551,7 @@ function fromBaseTen(n: number) {
   return make({
     topic: "bases",
     id: `to-base-ten-${n}`,
-    prompt: "Convert the binary (base two) number to base ten. Call the answer N.",
+    prompt: "Convert the binary (base two) number to base ten. Call the answer ⟦N⟧.",
     promptMath: `${bits}_{2}`,
     working: [
       ["Write each digit times its place value", `N=${expanded}`],
@@ -574,7 +582,7 @@ function toBinary(n: number) {
   return make({
     topic: "bases",
     id: `to-binary-${n}`,
-    prompt: `Convert ${n} to a binary (base two) number. Call the answer N.`,
+    prompt: `Convert ${n} to a binary (base two) number. Call the answer ⟦N⟧.`,
     working,
     gap: 1,
     whyStep: working.length - 1,
@@ -596,7 +604,7 @@ function rectangle(length: number, width: number) {
   return make({
     topic: "mensuration",
     id: `rectangle-${length}-${width}`,
-    prompt: `A rectangle has perimeter ${perimeter} cm and length ${length} cm. Find its width w in cm.`,
+    prompt: `A rectangle has perimeter ${perimeter} cm and length ${length} cm. Find its width ⟦w⟧ in cm.`,
     working: [
       ["Substitute into the perimeter equation", `2(${length}+w)=${perimeter}`],
       ["Divide both sides by 2", `${length}+w=${perimeter}\\div2`],
@@ -619,7 +627,7 @@ function trapezium(a: number, b: number, h: number) {
   return make({
     topic: "mensuration",
     id: `trapezium-${a}-${b}-${h}`,
-    prompt: `A trapezium has parallel sides ${a} cm and ${b} cm, and height ${h} cm. Find its area A in cm².`,
+    prompt: `A trapezium has parallel sides ${a} cm and ${b} cm, and height ${h} cm. Find its area ⟦A⟧ in cm².`,
     working: [
       ["Write the area formula", "A=(a+b)\\times h\\div2"],
       ["Substitute the values", `A=(${a}+${b})\\times${h}\\div2`],
