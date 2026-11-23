@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Loader2, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/brand/logo";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -15,6 +15,15 @@ import { cn } from "@/lib/utils";
 
 /** Where an invite link lands. The code is kept so it still works after the friend signs up. */
 export default function JoinPage() {
+  // The code comes from the URL at request time, so the page streams in behind a Suspense boundary.
+  return (
+    <Suspense fallback={<div className="min-h-dvh" aria-busy="true" />}>
+      <Join />
+    </Suspense>
+  );
+}
+
+function Join() {
   const code = String(useParams<{ code: string }>().code ?? "").toUpperCase().slice(0, 6);
   const router = useRouter();
   const { hydrated, account, profile } = useAppState();
