@@ -11,6 +11,7 @@ import { track, trackOnce } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
 import { normalisePhone, phoneToEmail } from "@/lib/auth/phone";
 import { inviterName, savedInvite } from "@/lib/partners/client";
+import { cleanReferralCode, clearReferral, referralOwner, savedReferral } from "@/lib/referral/client";
 
 type Mode = "login" | "register";
 
@@ -34,10 +35,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [pending, setPending] = useState(false);
   // Phone first: it is what most students have, and nothing is sent to it.
   const [method, setMethod] = useState<Method>("phone");
-  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; referral?: string; form?: string }>({});
   const copy = COPY[mode];
 
   const [inviter, setInviter] = useState<string | null>(null);
+  // Typed by the student, or filled in from the ambassador's link they opened on this device.
+  const [referral, setReferral] = useState("");
+  useEffect(() => {
+    const saved = mode === "register" ? savedReferral() : null;
+    if (saved) queueMicrotask(() => setReferral(saved));
+  }, [mode]);
 
   useEffect(() => {
     if (mode === "register") trackOnce("register_view");
@@ -62,17 +69,26 @@ export function AuthForm({ mode }: { mode: Mode }) {
       next.email = method === "phone" ? "Enter a Nigerian phone number, like 0801 234 5678." : "Enter a valid email address.";
     }
     if (password.length < 8) next.password = "Password must be at least 8 characters.";
+    // The referral code is optional, but one that matches no one is almost certainly a typing slip.
+    const typedReferral = referral.trim();
+    const referralCode = mode === "register" && typedReferral ? cleanReferralCode(typedReferral) : null;
+    if (mode === "register" && typedReferral && !referralCode) next.referral = "A referral code has 6 letters or numbers.";
     setErrors(next);
     if (Object.keys(next).length) return;
 
     setPending(true);
     try {
+      if (referralCode && !(await referralOwner(referralCode))) {
+        setErrors({ referral: "That referral code doesn't match anyone. Check it, or clear the box to continue without one." });
+        return;
+      }
       if (mode === "login") {
         await login(email, password);
         // The account gate sends students who haven't finished setup to onboarding.
         router.push("/practice");
       } else {
-        const result = await register(email, password);
+        const result = await register(email, password, referralCode);
+        clearReferral();
         void track("register_submitted", { confirmEmail: result === "confirm_email" });
         if (result === "confirm_email") setConfirmEmail(typed);
         else router.push("/onboarding");
@@ -158,6 +174,25 @@ export function AuthForm({ mode }: { mode: Mode }) {
             <p className="text-xs text-muted-foreground">Choose one you will remember. A phone number can&apos;t get a reset link.</p>
           ) : null}
         </div>
+        {mode === "register" ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="referral">Referral code <span className="font-normal text-muted-foreground">(optional)</span></Label>
+            <Input
+              id="referral"
+              name="referral"
+              value={referral}
+              onChange={(e) => setReferral(e.target.value.toUpperCase())}
+              autoComplete="off"
+              autoCapitalize="characters"
+              maxLength={12}
+              placeholder="From an ambassador"
+              className="h-12 text-base uppercase"
+              aria-invalid={!!errors.referral}
+              aria-describedby={errors.referral ? "referral-error" : undefined}
+            />
+            {errors.referral ? <p id="referral-error" className="text-sm text-destructive">{errors.referral}</p> : null}
+          </div>
+        ) : null}
         {errors.form ? <p role="alert" className="text-sm text-destructive">{errors.form}</p> : null}
         <Button type="submit" size="xl" className="w-full" disabled={pending}>
           {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}

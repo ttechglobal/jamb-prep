@@ -7,6 +7,7 @@ import { data } from "@/lib/data";
 import { emptyProgress } from "@/lib/game/rules";
 import { releaseReminders } from "@/lib/pwa/push";
 import { savedInvite } from "@/lib/partners/client";
+import { cleanReferralCode } from "@/lib/referral/client";
 import { currentSession, supabase } from "@/lib/supabase/client";
 import type { PlayerProgress, Profile } from "@/lib/types";
 
@@ -24,7 +25,7 @@ interface AppState {
   isGuest: boolean;
   progress: PlayerProgress;
   setProgress(progress: PlayerProgress): void;
-  register(email: string, password: string): Promise<RegisterResult>;
+  register(email: string, password: string, referralCode?: string | null): Promise<RegisterResult>;
   login(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
   saveProfile(profile: Profile): Promise<void>;
@@ -100,14 +101,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       progress,
       setProgress,
 
-      async register(email, password) {
+      async register(email, password, referralCode) {
         const auth = supabase().auth;
         const session = await currentSession();
         const options = { emailRedirectTo: redirectTo("/onboarding") };
         // A friend's invite goes into the account itself, so it still works when the confirmation link
         // is opened on another browser or in an email app, where this device's storage is out of reach.
         const invite = savedInvite();
-        const inviteData = invite ? { invite_code: invite } : undefined;
+        // A referral code goes in the same way. The database reads it from the account and records who brought
+        // this student in, so it holds on the mobile app and any other device too.
+        const referral = cleanReferralCode(referralCode);
+        const inviteData = invite || referral ? { ...(invite ? { invite_code: invite } : {}), ...(referral ? { referral_code: referral } : {}) } : undefined;
 
         // Upgrades the guest in place, so practice done before registering is kept.
         if (session?.user.is_anonymous) {

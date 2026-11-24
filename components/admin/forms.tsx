@@ -21,7 +21,7 @@ export function LoginForm() {
       <h1 className="text-2xl font-semibold">Admin</h1>
       <div className="space-y-1.5">
         <Label htmlFor="password">Password</Label>
-        <Input id="password" name="password" type="password" autoComplete="current-password" autoFocus required className="h-12 text-base" />
+        <Input id="password" name="password" type="password" autoComplete="current-password" autoCapitalize="off" autoCorrect="off" spellCheck={false} autoFocus required className="h-12 text-base" />
       </div>
       <Feedback state={state} />
       <Button type="submit" size="xl" className="w-full" disabled={pending}>

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import localFont from "next/font/local";
 import { InstalledWelcome } from "@/components/pwa/installed-welcome";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </PwaProvider>
         </AppStateProvider>
         <Toaster position="top-center" />
+        <Analytics />
       </body>
     </html>
   );

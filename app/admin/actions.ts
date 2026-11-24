@@ -13,7 +13,8 @@ export interface FormState {
 const KINDS = ["morning_goal", "morning_plain", "morning_countdown", "evening_streak", "evening_nudge"];
 
 export async function login(_: FormState, form: FormData): Promise<FormState> {
-  const given = String(form.get("password") ?? "");
+  // Phone keyboards often add a trailing space after a suggested word, and the saved password has none.
+  const given = String(form.get("password") ?? "").trim();
   // A password in .env.local replaces the database one.
   if (usingEnvPassword() || readEnvPassword().problem) {
     const result = verifyEnvPassword(given);
@@ -152,4 +153,14 @@ export async function sendNow(_: FormState, form: FormData): Promise<FormState> 
   await db.from("reminder_log").insert({ slot: "manual", devices: targets.length, sent, skipped: 0, removed: gone.length, failed });
   revalidatePath("/admin/notifications");
   return { ok: `Sent to ${sent} of ${targets.length} devices.${gone.length ? ` ${gone.length} had removed the app and were cleared.` : ""}${failed ? ` ${failed} failed.` : ""}` };
+}
+
+/** Records that a student paid, by hand, until payments are taken in the app. Counts toward their ambassador's 20%. */
+export async function recordPayment(form: FormData) {
+  if (!(await isAdmin())) return;
+  const userId = String(form.get("user") ?? "");
+  const naira = Number(form.get("naira"));
+  if (!/^[0-9a-f-]{36}$/.test(userId) || !Number.isFinite(naira) || naira <= 0 || naira > 1_000_000) return;
+  await adminDb().from("payments").insert({ user_id: userId, amount_kobo: Math.round(naira * 100), note: "Recorded by admin" });
+  revalidatePath("/admin/ambassadors");
 }
