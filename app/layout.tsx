@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import localFont from "next/font/local";
+import { Suspense } from "react";
 import { InstalledWelcome } from "@/components/pwa/installed-welcome";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
 import { SessionPill } from "@/components/study/session-pill";
@@ -61,7 +62,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <PwaProvider>
             <StudyTimerProvider>
               {children}
-              <SessionPill />
+              {/* The pill reads the page address, which is not known while a page like a results screen is prepared ahead. */}
+              <Suspense fallback={null}>
+                <SessionPill />
+              </Suspense>
             </StudyTimerProvider>
             <InstalledWelcome />
           </PwaProvider>
