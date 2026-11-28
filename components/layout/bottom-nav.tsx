@@ -76,8 +76,8 @@ function ReadArt() {
 
 const TABS = [
   { href: "/practice", label: "Practice", Art: PracticeArt },
-  // Notes are read from inside the study path. Until the path is switched on, Read keeps its own tab.
-  ...(PATH_ENABLED ? [{ href: "/path", label: "Study path", Art: PathArt }] : [{ href: "/read", label: "Read", Art: ReadArt }]),
+  ...(PATH_ENABLED ? [{ href: "/path", label: "Path", Art: PathArt }] : []),
+  { href: "/read", label: "Read", Art: ReadArt },
   { href: "/games", label: "Games", Art: GamesArt },
   { href: "/leaderboard", label: "Ranks", Art: RanksArt },
 ];

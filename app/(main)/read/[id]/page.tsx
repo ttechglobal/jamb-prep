@@ -15,6 +15,7 @@ import { awardRead, getReadLesson } from "@/lib/read/client";
 import { READ_XP } from "@/lib/read/xp";
 import { cn } from "@/lib/utils";
 import { matchTopic } from "@/lib/read/match";
+import { setLastRead } from "@/lib/read/last";
 import type { ReadLesson } from "@/lib/read/types";
 
 export default function ReaderPage() {
@@ -31,6 +32,7 @@ export default function ReaderPage() {
       .then(async (l) => {
         if (!live) return;
         setLesson(l);
+        if (l) setLastRead({ id: l.id, title: l.title, topic: l.topicTitle, subjectSlug: l.subjectSlug });
         if (l?.subjectId) {
           const topics = await data.listTopics(l.subjectId).catch(() => []);
           if (live) setTopic(matchTopic(topics, [l.topicTitle, l.groupTitle, l.title]));

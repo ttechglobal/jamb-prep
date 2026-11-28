@@ -39,7 +39,7 @@ export const supabaseSource: DataSource = {
       .order("name");
     if (error) throw new Error("Couldn't load topics. Check your connection and try again.");
     return data.map((t): Topic => ({ id: t.id, subjectId: t.subject_id, name: t.name }));
-    });
+    }, { persist: true });
   },
 
   countQuestions: (subjectId, topicId) =>

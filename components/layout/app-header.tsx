@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Timer } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { isFocusedPage } from "@/lib/games/session-route";
 import { Logo } from "@/components/brand/logo";
@@ -13,7 +14,9 @@ import { cn } from "@/lib/utils";
 /** Desktop navigation. Phones use the bottom bar instead. */
 const NAV = [
   { href: "/practice", label: "Practice" },
-  ...(PATH_ENABLED ? [{ href: "/path", label: "Study path" }] : [{ href: "/read", label: "Read" }]),
+  ...(PATH_ENABLED ? [{ href: "/path", label: "Study path" }] : []),
+  { href: "/read", label: "Read" },
+  { href: "/study", label: "Study" },
   { href: "/games", label: "Games" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];
@@ -44,6 +47,13 @@ export function AppHeader() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
+          <Link
+            href="/study"
+            aria-label="Study timer"
+            className="grid size-10 place-items-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground sm:hidden"
+          >
+            <Timer className="size-5" aria-hidden />
+          </Link>
           <StreakPill days={liveStreak(progress)} />
           <XpPill xp={progress.xp} />
           <Link

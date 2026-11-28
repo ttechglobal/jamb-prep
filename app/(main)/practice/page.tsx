@@ -8,6 +8,7 @@ import { PartnerCard } from "@/components/partners/partner-card";
 import { PathCard } from "@/components/path/path-card";
 import { QuickFiveCard } from "@/components/practice/quick-five-card";
 import { WorkOnThis } from "@/components/practice/work-on-this";
+import { StudyCard } from "@/components/study/study-card";
 import { StudyTimesPrompt } from "@/components/study/study-times";
 import { Button } from "@/components/ui/button";
 import { useStartSession } from "@/hooks/use-start-session";
@@ -15,7 +16,7 @@ import { useAppState } from "@/lib/app-state";
 import { quickFive } from "@/lib/engine/presets";
 import { SUBJECTS } from "@/lib/catalog";
 import { UTME_FORMAT } from "@/lib/exam-format";
-import { PARTNERS_VISIBLE, PATH_ENABLED } from "@/lib/path/flag";
+import { PARTNERS_VISIBLE } from "@/lib/path/flag";
 import { totalTarget } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +68,7 @@ export default function PracticePage() {
 
         <div className="flex flex-col gap-4 lg:order-1">
           <PathCard />
+          <StudyCard />
 
           {/* Desktop: the big Quick Five block. */}
           <QuickFiveBlock className="hidden lg:block" />
@@ -75,8 +77,7 @@ export default function PracticePage() {
 
           <section aria-label="More practice" className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <QuickFiveCard subjectIds={profile.subjectIds} className="lg:hidden" />
-            {/* Notes are read from the study path. Read only gets its own card while the path is switched off. */}
-            {PATH_ENABLED ? null : <ModeCard href="/read" icon={BookOpen} tint="bg-sky-soft text-sky" title="Read" description="Notes by topic" className="hidden lg:flex" />}
+            <ModeCard href="/read" icon={BookOpen} tint="bg-sky-soft text-sky" title="Read" description="Notes by topic" className="hidden lg:flex" />
             <ModeCard
               href="/practice/subject"
               icon={BookOpenCheck}

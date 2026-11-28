@@ -3,8 +3,10 @@ import { Analytics } from "@vercel/analytics/next";
 import localFont from "next/font/local";
 import { InstalledWelcome } from "@/components/pwa/installed-welcome";
 import { PwaProvider } from "@/components/pwa/pwa-provider";
+import { SessionPill } from "@/components/study/session-pill";
 import { Toaster } from "@/components/ui/sonner";
 import { AppStateProvider } from "@/lib/app-state";
+import { StudyTimerProvider } from "@/lib/study/session";
 import "./globals.css";
 
 // Fonts live in app/fonts and ship with the app. They used to be fetched from Google at start-up,
@@ -57,7 +59,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <AppStateProvider>
           <PwaProvider>
-            {children}
+            <StudyTimerProvider>
+              {children}
+              <SessionPill />
+            </StudyTimerProvider>
             <InstalledWelcome />
           </PwaProvider>
         </AppStateProvider>
