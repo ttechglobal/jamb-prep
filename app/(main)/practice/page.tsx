@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BookOpenCheck, ChevronRight, Clock, Gamepad2, Loader2, Target, Trophy, Zap } from "lucide-react";
 import { useState } from "react";
 import { LevelBar, SubjectIcon } from "@/components/game/game-ui";
+import { WorkOnThis } from "@/components/practice/work-on-this";
 import { PartnerCard } from "@/components/partners/partner-card";
 import { PathCard } from "@/components/path/path-card";
 import { PARTNERS_VISIBLE } from "@/lib/path/flag";
@@ -128,6 +129,9 @@ export default function PracticePage() {
             <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
           </Link>
         </section>
+        <div className="hidden lg:contents">
+          <WorkOnThis />
+        </div>
         <ModeCard
           href="/games"
           icon={Gamepad2}
