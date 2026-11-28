@@ -6,7 +6,7 @@ import postgres from "postgres";
 import { readFileSync } from "node:fs";
 
 const sql = postgres(process.env.SUPABASE_DB_URL, { max: 1, prepare: false, onnotice: () => {} });
-const MIGRATION = new URL("../migrations/20261128000001_path_units_and_stars.sql", import.meta.url);
+const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
 
 const U = {
   student: "00000000-0000-4000-8000-0000000000b1",
@@ -45,11 +45,12 @@ try {
       }
     };
 
-    const [applied] = await tx`select to_regclass('public.path_units') as t`;
-    if (!applied.t) {
-      await tx.unsafe(readFileSync(MIGRATION, "utf8"));
-      console.log("(migration not applied yet: ran it inside the test transaction)");
-    }
+    // Any migration not applied yet runs inside the test transaction, so it is checked before it is real.
+    const [first] = await tx`select to_regclass('public.path_units') as t`;
+    const seeded = first.t ? (await tx`select count(*)::int as n from public.path_units where subject_id = 'physics'`)[0].n > 0 : false;
+    if (!first.t) await tx.unsafe(readFileSync(MIGRATIONS[0], "utf8"));
+    if (!seeded) await tx.unsafe(readFileSync(MIGRATIONS[1], "utf8"));
+    if (!first.t || !seeded) console.log("(some path migrations were not applied yet: ran them inside the test transaction)");
 
     for (const [key, id] of Object.entries(U)) {
       await tx`insert into auth.users (id, aud, role, email, is_anonymous)
@@ -106,8 +107,19 @@ try {
     check("a new student has no stars", path0.units.every((u) => u.stars === 0 && u.answers === 0));
     const english = await rpc("get_path", ["english"]);
     check("English has no units yet", english.units.length === 0);
-    const topics = await tx`select topic_id from public.path_unit_topics`;
+    const topics = await tx`select topic_id from public.path_unit_topics put join public.path_units pu on pu.id = put.unit_id where pu.subject_id = 'mathematics'`;
     check("all 23 Maths topics are in a unit", topics.length === 23, topics.length);
+
+    // Physics and Chemistry: every active topic sits in a unit, and every unit can carry rounds on two days.
+    for (const [subject, units] of [["physics", 14], ["chemistry", 10]]) {
+      const p = await rpc("get_path", [subject]);
+      check(`${subject} has ${units} units`, p.units.length === units, p.units.length);
+      check(`every ${subject} unit holds at least 20 questions`, p.units.every((u) => u.questionCount >= 20), p.units.filter((u) => u.questionCount < 20).map((u) => [u.slug, u.questionCount]));
+      const [{ loose }] = await asOwner().then(() => tx`select count(*)::int as loose from public.topics t where t.subject_id = ${subject} and t.active
+        and not exists (select 1 from public.path_unit_topics put where put.topic_id = t.id)`);
+      check(`every ${subject} topic belongs to a unit`, loose === 0, loose);
+      await as(U.student);
+    }
 
     // Rounds -----------------------------------------------------------------
     const a = await play({ unitId: poly }, 5);
@@ -149,6 +161,11 @@ try {
     check("a bad round never removes a star", m2.stars === 1, m2);
     check("a bad run flags Revisit", m2.revisit === true, m2);
     check("a solid unit is not flagged", (await stars(poly)).revisit === false);
+
+    // A round in another subject earns its own star.
+    const organic = (await tx`select id from public.path_units where slug = 'organic-compounds'`)[0].id;
+    const chem = await play({ subjectIds: ["chemistry"], unitId: organic }, 7);
+    check("a Chemistry unit round earns a star", chem.result.reward.path?.starsAfter === 1, chem.result.reward.path);
 
     // Other modes count ------------------------------------------------------
     await as(U.student);
