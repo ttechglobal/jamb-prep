@@ -19,7 +19,9 @@ A reading page, not a video page. A student picks a subject and topic, searches,
 1. **Hosting.** The owner deploys EXL Learn on Vercel first (push the unpushed lesson and reader commits) and gives JAMB Prep its HTTPS address. Until then Read cannot go live. Set as `EXL_API_BASE` on the server.
 2. **Free or paid.** Everything is free at launch. `read_access` and the paywall wait until there is enough content to sell.
 3. **Topic mapping.** Claude drafts the table from EXL's topic list and JAMB Prep's topics. The owner corrects it on an admin page.
-4. **Do lessons read well as notes?** Still open. Read two real lessons as a page before converting them. This is the first thing to do when EXL is online.
+4. **Do lessons read well as notes?** Yes, checked 2026-11-28 against "Dalton's Atomic Theory". Teaching steps are plain prose with bold terms, key terms, and callouts (did you know, common mistake, exam tip, equation), so they work as a reader. Illustrations are still `status: pending` with no image, so skip them for now. Quick checks and the closing knowledge check can be left out or shown as optional.
+
+**Live EXL (https://exllearn.vercel.app, 2026-11-28):** the catalogue works, but only 2 lessons are published, both Chemistry (Structure of the Atom, Acids Bases and Salts). No Maths or English. The Read tab must stay hidden or say "Coming soon" per subject until more are published.
 
 ## Design
 
