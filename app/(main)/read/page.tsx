@@ -1,19 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, ChevronRight, Search } from "lucide-react";
+import { BookOpen, Check, ChevronRight, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SubjectIcon } from "@/components/game/game-ui";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppState } from "@/lib/app-state";
 import { SUBJECTS } from "@/lib/catalog";
+import { MINUTE, cached } from "@/lib/cache";
 import { getReadCatalogue } from "@/lib/read/client";
+import { supabase } from "@/lib/supabase/client";
 import type { ReadCatalogue } from "@/lib/read/types";
 import { cn } from "@/lib/utils";
 
 /** Short notes by topic. Whatever EXL Learn has published is here: subjects, topics and lessons appear on their own. */
 export default function ReadPage() {
-  const { profile } = useAppState();
+  const { profile, isGuest } = useAppState();
+  const [done, setDone] = useState<Set<string>>(new Set());
   const [catalogue, setCatalogue] = useState<ReadCatalogue | null>(null);
   const [failed, setFailed] = useState(false);
   const [query, setQuery] = useState("");
@@ -28,6 +31,22 @@ export default function ReadPage() {
       live = false;
     };
   }, []);
+
+  // Lessons the student has finished get a tick.
+  useEffect(() => {
+    if (isGuest) return;
+    let live = true;
+    cached("user:read-done", 10 * MINUTE, async () => {
+      const { data, error } = await supabase().from("read_completions").select("lesson_id");
+      if (error) throw error;
+      return (data ?? []).map((r) => r.lesson_id as string);
+    })
+      .then((ids) => live && setDone(new Set(ids)))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [isGuest]);
 
   // The student's own subjects come first.
   const subjects = useMemo(() => {
@@ -134,7 +153,13 @@ export default function ReadPage() {
                                   {l.topicTitle && l.topicTitle !== t.title ? ` · ${l.topicTitle}` : ""}
                                 </span>
                               </span>
-                              <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+                              {done.has(l.id) ? (
+                                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                                  <Check className="size-4" strokeWidth={3} aria-label="Finished" />
+                                </span>
+                              ) : (
+                                <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+                              )}
                             </Link>
                           </li>
                         ))}

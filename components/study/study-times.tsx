@@ -363,7 +363,7 @@ export function StudyTimesPrompt() {
   if (isGuest || times === null) return null;
   const next = nextStudyLabel(times);
   return (
-    <Link href="/settings?edit=study" className="order-3 game-card game-tap flex items-center gap-3 p-4">
+    <Link href="/settings?edit=study" className="game-card game-tap flex items-center gap-3 p-4">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
         <Clock className="size-6" aria-hidden />
       </span>

@@ -54,7 +54,7 @@ export function WorkOnThis() {
   if (trends.length === 0) return null;
 
   return (
-    <section aria-labelledby="work-on-title" className="order-3 game-card p-4">
+    <section aria-labelledby="work-on-title" className="game-card p-4">
       <div className="flex items-center gap-2">
         <TrendingUp className="size-5 text-primary" aria-hidden />
         <h2 id="work-on-title" className="font-display text-lg font-semibold">

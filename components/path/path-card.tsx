@@ -68,12 +68,12 @@ export function PathCard({ className }: { className?: string }) {
     <Link
       href={`/path?s=${current.subjectId}&open=${current.next.id}`}
       aria-label={`${fresh ? "Start" : "Continue"} your path: ${current.next.name}`}
-      className={cn("game-card game-tap block border-violet/40 bg-violet-soft/40 p-4", className)}
+      className={cn("game-card game-tap block border-violet/40 bg-violet-soft/40 p-4 lg:flex lg:items-center lg:gap-5 lg:p-5", className)}
     >
-      <span className="flex items-center gap-3">
+      <span className="flex items-center gap-3 lg:min-w-0 lg:flex-1 lg:gap-5">
         <span
           aria-hidden
-          className="grid size-14 shrink-0 place-items-center rounded-full border-b-[5px] border-[#4C1D95] bg-violet text-white shadow-[0_0_0_5px_#DDD6FE]"
+          className="grid size-14 lg:size-16 shrink-0 place-items-center rounded-full border-b-[5px] border-[#4C1D95] bg-violet text-white shadow-[0_0_0_5px_#DDD6FE]"
         >
           <Play className="ml-0.5 size-6 fill-current" />
         </span>
@@ -82,22 +82,23 @@ export function PathCard({ className }: { className?: string }) {
             <SubjectIcon id={current.subjectId} className="size-5 rounded-md" iconClassName="size-3" />
             {fresh ? "START YOUR PATH" : "YOUR PATH"} · {subject?.shortName.toUpperCase()}
           </span>
-          <span className="line-clamp-2 block font-display text-2xl leading-tight font-semibold">{current.next.name}</span>
+          <span className="line-clamp-2 font-display text-2xl leading-tight font-semibold">{current.next.name}</span>
           <span className="block text-xs text-muted-foreground">
             {fresh ? `${current.unitCount} topics, most asked first` : `Topic ${current.next.index} of ${current.unitCount}`}
           </span>
+          <TrailDots trail={current.trail} nextIndex={current.next.index} className="mt-2 hidden lg:flex" />
         </span>
       </span>
-      <TrailDots trail={current.trail} nextIndex={current.next.index} />
-      <span className={buttonVariants({ variant: "gold", size: "xl", className: "mt-3 w-full" })}>{fresh ? "Start here" : "Continue"}</span>
+      <TrailDots trail={current.trail} nextIndex={current.next.index} className="lg:hidden" />
+      <span className={buttonVariants({ variant: "gold", size: "xl", className: "mt-3 w-full lg:mt-0 lg:w-48 lg:shrink-0" })}>{fresh ? "Start here" : "Continue"}</span>
     </Link>
   );
 }
 
 /** A preview of the whole trail: one dot per topic. Gold is solid, green has stars, orange needs a revisit, purple is next. */
-function TrailDots({ trail, nextIndex }: { trail: PathOverviewSubject["trail"]; nextIndex: number }) {
+function TrailDots({ trail, nextIndex, className }: { trail: PathOverviewSubject["trail"]; nextIndex: number; className?: string }) {
   return (
-    <ol aria-label="Your trail" className="mt-3.5 flex flex-wrap items-center gap-1.5">
+    <ol aria-label="Your trail" className={cn("mt-3.5 flex flex-wrap items-center gap-1.5", className)}>
       {trail.map((t, i) => {
         const isNext = i + 1 === nextIndex;
         const label = isNext ? "Next up" : t.revisit ? "Revisit" : t.stars === 0 ? "Not started" : `${t.stars} of 3 stars`;

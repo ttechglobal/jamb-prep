@@ -1,4 +1,5 @@
-import { HOUR, MINUTE, cached } from "@/lib/cache";
+import { HOUR, MINUTE, cached, clearUserCache } from "@/lib/cache";
+import { supabase } from "@/lib/supabase/client";
 import type { ReadCatalogue, ReadLesson } from "./types";
 
 export function getReadCatalogue(): Promise<ReadCatalogue> {
@@ -17,4 +18,23 @@ export function getReadLesson(id: string): Promise<ReadLesson | null> {
     if (!res.ok) throw new Error("Couldn't load this lesson. Check your connection and try again.");
     return res.json();
   });
+}
+
+/** Tells the server the student finished a lesson. Returns the XP added (0 when they had finished it before), or null on a failure. */
+export async function awardRead(lessonId: string): Promise<{ awarded: number; xp: number } | null> {
+  try {
+    const { data } = await supabase().auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return null;
+    const res = await fetch("/api/read/complete", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+      body: JSON.stringify({ lessonId }),
+    });
+    if (!res.ok) return null;
+    clearUserCache();
+    return res.json();
+  } catch {
+    return null;
+  }
 }

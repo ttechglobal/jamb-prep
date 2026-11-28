@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { isGameSession } from "@/lib/games/session-route";
+import { isFocusedPage } from "@/lib/games/session-route";
 import { PATH_ENABLED } from "@/lib/path/flag";
 import { cn } from "@/lib/utils";
 
@@ -86,7 +86,7 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  if (isGameSession(pathname)) return null;
+  if (isFocusedPage(pathname)) return null;
 
   return (
     <nav
