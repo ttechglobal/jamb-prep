@@ -63,9 +63,21 @@ function PathArt() {
   );
 }
 
+function ReadArt() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-full" aria-hidden>
+      <path d="M24 12c-4-3.500-10-4.500-17-4v29c7-.5 13 .5 17 4z" fill="#38BDF8" {...stroke} />
+      <path d="M24 12c4-3.500 10-4.500 17-4v29c-7-.5-13 .5-17 4z" fill="#7DD3FC" {...stroke} />
+      <path d="M12 16c3 0 6 .5 8 1.500M12 22c3 0 6 .5 8 1.500M28 17.500c2-1 5-1.500 8-1.500M28 23.500c2-1 5-1.500 8-1.500" fill="none" stroke="#fff" strokeWidth="2.400" strokeLinecap="round" />
+      <path d="M24 12v28" {...stroke} />
+    </svg>
+  );
+}
+
 const TABS = [
   { href: "/practice", label: "Practice", Art: PracticeArt },
   ...(PATH_ENABLED ? [{ href: "/path", label: "Path", Art: PathArt }] : []),
+  { href: "/read", label: "Read", Art: ReadArt },
   { href: "/games", label: "Games", Art: GamesArt },
   { href: "/leaderboard", label: "Ranks", Art: RanksArt },
 ];

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpenCheck, ChevronRight, Clock, Gamepad2, Loader2, Target, Trophy, Zap } from "lucide-react";
+import { BookOpen, BookOpenCheck, ChevronRight, Clock, Gamepad2, Loader2, Target, Trophy, Zap } from "lucide-react";
 import { useState } from "react";
 import { LevelBar, SubjectIcon } from "@/components/game/game-ui";
 import { WorkOnThis } from "@/components/practice/work-on-this";
@@ -85,7 +85,8 @@ export default function PracticePage() {
 
           <StudyTimesPrompt />
 
-          <section aria-label="More practice" className="order-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-3">
+          <section aria-label="More practice" className="order-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <ModeCard href="/read" icon={BookOpen} tint="bg-sky-soft text-sky" title="Read" description="Notes by topic" />
             <ModeCard
               href="/practice/subject"
               icon={BookOpenCheck}
@@ -100,14 +101,6 @@ export default function PracticePage() {
               tint="bg-violet-soft text-violet"
               title="Mock Exam"
               description="Full UTME CBT, 2 hours"
-            />
-            <ModeCard
-              href="/games"
-              icon={Gamepad2}
-              tint="bg-gold-soft text-gold-ink"
-              title="Games"
-              description="Practise by playing"
-              className="lg:hidden"
             />
           </section>
         </div>

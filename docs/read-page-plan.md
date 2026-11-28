@@ -1,6 +1,10 @@
 # Read page: build plan
 
-Status: plan only. Design is on the canvas (Read hub, Read topic, Read desktop). Source: EXL Learn's read-only Content API (`_projects_/exl_learn/exl-learn-concept/docs/content-api.md` and `lesson-api-v1.4.md`).
+Status: built 2026-11-28 (phases 1 to 3, without the database tables). It reads EXL Learn live, so new lessons, topics and subjects show up on their own after a minute or so of caching. Nothing to change in this app when you publish more.
+
+How it works: `lib/read/exl.ts` (server only) fetches and flattens the EXL catalogue and lessons and caches them; `app/api/read/*` hands them to the browser; `/read` is the hub and `/read/[id]` the reader. Lessons are matched to a JAMB topic by name in `lib/read/match.ts` (exact, then contains, then same key words). A lesson with no match still shows and offers practice for the whole subject. To pin a wrong or missing match, add a line to `OVERRIDES` there. There is no `read_topic_map` table, admin page, progress table or paywall yet. `EXL_API_BASE` overrides the address (default https://exllearn.vercel.app).
+
+Original plan follows. Status: plan only. Design is on the canvas (Read hub, Read topic, Read desktop). Source: EXL Learn's read-only Content API (`_projects_/exl_learn/exl-learn-concept/docs/content-api.md` and `lesson-api-v1.4.md`).
 
 ## What the Read page is
 

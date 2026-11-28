@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/practice", label: "Practice" },
   ...(PATH_ENABLED ? [{ href: "/path", label: "Path" }] : []),
+  { href: "/read", label: "Read" },
   { href: "/games", label: "Games" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];
