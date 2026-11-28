@@ -6,7 +6,7 @@ import postgres from "postgres";
 import { readFileSync } from "node:fs";
 
 const sql = postgres(process.env.SUPABASE_DB_URL, { max: 1, prepare: false, onnotice: () => {} });
-const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql", "20261128000003_path_units_other_subjects.sql", "20261128000004_path_themes_and_auto_units.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
+const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql", "20261128000003_path_units_other_subjects.sql", "20261128000004_path_themes_and_auto_units.sql", "20261128000005_path_units_crk_government_literature.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
 
 const U = {
   student: "00000000-0000-4000-8000-0000000000b1",
@@ -54,7 +54,8 @@ try {
     if (!(await has("biology"))) await tx.unsafe(readFileSync(MIGRATIONS[2], "utf8"));
     const [themed] = await tx`select count(*)::int as n from information_schema.columns where table_schema = 'public' and table_name = 'path_units' and column_name = 'theme'`;
     if (!themed.n) await tx.unsafe(readFileSync(MIGRATIONS[3], "utf8"));
-    if (!first.t || !seeded || !themed.n) console.log("(some path migrations were not applied yet: ran them inside the test transaction)");
+    if (!(await has("crk"))) await tx.unsafe(readFileSync(MIGRATIONS[4], "utf8"));
+    if (!first.t || !seeded || !themed.n || !(await has("crk"))) console.log("(some path migrations were not applied yet: ran them inside the test transaction)");
 
     for (const [key, id] of Object.entries(U)) {
       await tx`insert into auth.users (id, aud, role, email, is_anonymous)
@@ -115,10 +116,10 @@ try {
     check("all 23 Maths topics are in a unit", topics.length === 23, topics.length);
 
     // Every other seeded subject: every active topic sits in a unit, and every unit can carry rounds on two days.
-    for (const [subject, units] of [["physics", 14], ["chemistry", 10], ["biology", 9], ["accounting", 10], ["commerce", 10], ["economics", 10]]) {
+    for (const [subject, units, min] of [["physics", 14, 20], ["chemistry", 10, 20], ["biology", 9, 20], ["accounting", 10, 20], ["commerce", 10, 20], ["economics", 10, 20], ["crk", 11, 20], ["government", 12, 20], ["literature", 2, 15]]) {
       const p = await rpc("get_path", [subject]);
       check(`${subject} has ${units} units`, p.units.length === units, p.units.length);
-      check(`every ${subject} unit holds at least 20 questions`, p.units.every((u) => u.questionCount >= 20), p.units.filter((u) => u.questionCount < 20).map((u) => [u.slug, u.questionCount]));
+      check(`every ${subject} unit holds at least ${min} questions`, p.units.every((u) => u.questionCount >= min), p.units.filter((u) => u.questionCount < min).map((u) => [u.slug, u.questionCount]));
       const [{ loose }] = await asOwner().then(() => tx`select count(*)::int as loose from public.topics t where t.subject_id = ${subject} and t.active
         and not exists (select 1 from public.path_unit_topics put where put.topic_id = t.id)`);
       check(`every ${subject} topic belongs to a unit`, loose === 0, loose);
