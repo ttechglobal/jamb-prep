@@ -151,7 +151,17 @@ export function UnitSheet({
                   </li>
                 ))}
               </ul>
-            ) : null}
+            ) : (
+              <div className="flex min-h-12 items-center gap-3 rounded-2xl border-2 border-dashed px-3 py-2 text-muted-foreground">
+                <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted">
+                  <BookOpen className="size-4" strokeWidth={2.4} />
+                </span>
+                <span className="min-w-0 text-sm leading-snug">
+                  <span className="block font-semibold">Read</span>
+                  Notes for this topic are on their way.
+                </span>
+              </div>
+            )}
           </>
         ) : (
           <Button variant="gold" size="xl" className="mt-1 w-full" disabled={starting} onClick={() => onStart(10)}>

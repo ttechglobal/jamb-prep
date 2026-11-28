@@ -363,6 +363,7 @@ function SubjectPath({ subjectId, openId, sideSwitcher }: { subjectId: string; o
                     unit={unit}
                     number={i + 1}
                     isNext={next?.id === unit.id}
+                    hasNotes={(reading.get(unit.id)?.length ?? 0) > 0}
                     offset={WIGGLE[i % WIGGLE.length]}
                     onOpen={() => {
                       void track("path_unit_open", { subject: subjectId, unit: unit.slug });

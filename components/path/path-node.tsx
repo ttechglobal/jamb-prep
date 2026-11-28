@@ -1,4 +1,4 @@
-import { Check, Play, RotateCcw, Star, Trophy } from "lucide-react";
+import { BookOpen, Check, Play, RotateCcw, Star, Trophy } from "lucide-react";
 import type { PathUnit } from "@/lib/path/types";
 import { cn } from "@/lib/utils";
 
@@ -44,12 +44,15 @@ export function PathNode({
   number,
   isNext,
   offset,
+  hasNotes,
   onOpen,
 }: {
   unit: PathUnit;
   number: number;
   isNext: boolean;
   offset: number;
+  /** There are notes to read for this topic. */
+  hasNotes?: boolean;
   onOpen: () => void;
 }) {
   const state = stateOf(unit, isNext);
@@ -95,6 +98,11 @@ export function PathNode({
             {unit.name}
           </span>
           {state === "revisit" ? <span className="text-xs font-bold text-[#C2410C]">Revisit</span> : null}
+          {hasNotes ? (
+            <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-sky">
+              <BookOpen className="size-3.5" strokeWidth={2.4} aria-hidden /> Notes to read
+            </span>
+          ) : null}
         </span>
       </button>
     </li>
