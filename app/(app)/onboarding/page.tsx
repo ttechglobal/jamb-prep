@@ -10,7 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubjectPicker, isValidSubjectSelection } from "@/components/profile/subject-picker";
 import { SubjectTargets } from "@/components/profile/subject-targets";
+import { StartChoice } from "@/components/path/start-choice";
 import { track } from "@/lib/analytics";
+import { setPathPrefs } from "@/lib/path/client";
+import { PATH_ENABLED } from "@/lib/path/flag";
+import type { PathMode } from "@/lib/path/types";
 import { useAppState } from "@/lib/app-state";
 import { UTME_FORMAT } from "@/lib/exam-format";
 import { targetsFor } from "@/lib/profile";
@@ -20,6 +24,7 @@ const STEPS = [
   { title: "What should we call you?", sub: "You can change this any time." },
   { title: "Choose your UTME subjects", sub: "Use of English is compulsory. Pick three more." },
   { title: "Set your target scores", sub: "One for each subject. These are your goals, not a prediction." },
+  ...(PATH_ENABLED ? [{ title: "How do you want to start?", sub: "You can switch any time. Everything you practise counts either way." }] : []),
 ];
 
 export default function OnboardingPage() {
@@ -38,6 +43,7 @@ export default function OnboardingPage() {
       ],
   );
   const [targets, setTargets] = useState<Record<string, number>>(profile?.subjectTargets ?? {});
+  const [startMode, setStartMode] = useState<PathMode>("path");
 
   useEffect(() => {
     if (hydrated && !account) router.replace("/register");
@@ -52,7 +58,12 @@ export default function OnboardingPage() {
     try {
       await saveProfile({ displayName: name.trim(), subjectIds: subjects, subjectTargets: targetsFor(subjects, targets) });
       void track("onboarding_done");
-      router.push("/practice");
+      if (PATH_ENABLED) {
+        void track("path_choice", { mode: startMode });
+        // A failed save only means the Home card asks again later, so it never blocks setup.
+        await setPathPrefs(startMode, null).catch(() => {});
+      }
+      router.push(PATH_ENABLED && startMode === "path" ? "/path" : "/practice");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't save. Try again.");
     }
@@ -110,8 +121,10 @@ export default function OnboardingPage() {
               </div>
             ) : step === 1 ? (
               <SubjectPicker value={subjects} onChange={setSubjects} />
-            ) : (
+            ) : step === 2 ? (
               <SubjectTargets subjectIds={subjects} value={targets} onChange={setTargets} />
+            ) : (
+              <StartChoice value={startMode} onChange={setStartMode} />
             )}
           </div>
 
@@ -122,7 +135,7 @@ export default function OnboardingPage() {
               </Button>
             ) : null}
             <Button type="submit" size="xl" className="flex-1" disabled={!canContinue}>
-              {last ? "Start practising" : "Continue"}
+              {last ? (PATH_ENABLED && startMode === "path" ? "Start with my path" : "Start practising") : "Continue"}
             </Button>
           </div>
         </form>

@@ -3,6 +3,7 @@
  * Keep these free of storage details so the data layer can be swapped without UI changes.
  */
 
+import type { PathReward } from "@/lib/path/types";
 import type { Block, OptionKey, PrescribedWorkRef, QuestionOption, SharedContext, Solution } from "@/lib/content/types";
 
 export type { OptionKey } from "@/lib/content/types";
@@ -48,6 +49,10 @@ export interface SessionConfig {
   mode: PracticeMode;
   subjectIds: string[];
   topicId?: string | null;
+  /** Path rounds: one unit, or several for a mixed check. Only for "subject" rounds. */
+  unitId?: string;
+  unitIds?: string[];
+  checkpoint?: boolean;
   /** Total questions; for mock this is derived from the exam format. */
   count: number;
   durationSec?: number | null;
@@ -131,4 +136,6 @@ export interface SessionReward {
   levelBefore: number;
   levelAfter: number;
   streak: number;
+  /** Present when the round touched the path. */
+  path?: PathReward;
 }

@@ -5,6 +5,8 @@ import { BookOpenCheck, ChevronRight, Clock, Gamepad2, Loader2, Target, Trophy, 
 import { useState } from "react";
 import { LevelBar, SubjectIcon } from "@/components/game/game-ui";
 import { PartnerCard } from "@/components/partners/partner-card";
+import { PathCard } from "@/components/path/path-card";
+import { PARTNERS_VISIBLE } from "@/lib/path/flag";
 import { StudyTimesPrompt } from "@/components/study/study-times";
 import { Button } from "@/components/ui/button";
 import { useStartSession } from "@/hooks/use-start-session";
@@ -33,6 +35,8 @@ export default function PracticePage() {
 
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
         <div className="contents lg:flex lg:flex-col lg:gap-4">
+          <PathCard className="order-2" />
+
           <section
             aria-labelledby="quick-five-title"
             className="order-2 rounded-3xl border-b-[6px] border-primary-edge bg-primary p-5 text-primary-foreground sm:p-7"
@@ -76,7 +80,7 @@ export default function PracticePage() {
             </ul>
           </section>
 
-          <PartnerCard />
+          {PARTNERS_VISIBLE ? <PartnerCard /> : null}
 
           <StudyTimesPrompt />
 

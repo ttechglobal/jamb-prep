@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { ArrowRight, ChevronRight, ClipboardCheck, Clock, Info, Target, Zap } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { Confetti, Meter, Stars, SubjectIcon } from "@/components/game/game-ui";
+import { PathOutcome } from "@/components/path/path-outcome";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { partnerAction } from "@/lib/partners/client";
@@ -100,7 +101,7 @@ function Results() {
   const subject = result.config.subjectIds[0];
   const practiceAgainHref = {
     quick_five: `/start?last=${subject}`,
-    subject: `/practice/subject?s=${subject}`,
+    subject: result.config.unitIds?.length ? `/path?s=${subject}` : `/practice/subject?s=${subject}`,
     timed: "/practice/timed",
     mock: "/practice/mock",
   }[result.config.mode];
@@ -143,6 +144,8 @@ function Results() {
           className="bg-sky-soft"
         />
       </section>
+
+      <PathOutcome path={reward.path} subjectId={subject} />
 
       {isGuest ? (
         <section className="mt-3 rounded-2xl border-2 border-b-[5px] border-gold-edge bg-gold-soft p-4">

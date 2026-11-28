@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isGameSession } from "@/lib/games/session-route";
+import { PATH_ENABLED } from "@/lib/path/flag";
 import { cn } from "@/lib/utils";
 
 const INK = "#1F2937";
@@ -51,6 +52,17 @@ function RanksArt() {
   );
 }
 
+function PathArt() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-full" aria-hidden>
+      <path d="M17 36h12a7 7 0 0 0 0-14H19a7 7 0 0 1 0-14h12" fill="none" {...stroke} strokeDasharray="1 5" />
+      <circle cx="12" cy="36" r="7" fill="#8B5CF6" {...stroke} />
+      <path d="M10 32.500l6 3.500-6 3.500z" fill="#fff" stroke="#fff" strokeWidth="1.400" strokeLinejoin="round" />
+      <circle cx="36" cy="8" r="6" fill="#FACC15" {...stroke} />
+    </svg>
+  );
+}
+
 function ProgressArt() {
   return (
     <svg viewBox="0 0 48 48" className="size-full" aria-hidden>
@@ -64,6 +76,7 @@ function ProgressArt() {
 
 const TABS = [
   { href: "/practice", label: "Practice", Art: PracticeArt },
+  ...(PATH_ENABLED ? [{ href: "/path", label: "Path", Art: PathArt }] : []),
   { href: "/games", label: "Games", Art: GamesArt },
   { href: "/leaderboard", label: "Ranks", Art: RanksArt },
   { href: "/progress", label: "Progress", Art: ProgressArt },
@@ -80,7 +93,7 @@ export function BottomNav() {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-30 border-t-2 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-4 gap-1 px-2 pt-1.5 pb-1.5">
+      <ul className={cn("mx-auto grid max-w-md gap-1 px-2 pt-1.5 pb-1.5", TABS.length > 4 ? "grid-cols-5" : "grid-cols-4")}>
         {TABS.map(({ href, label, Art }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (

@@ -7,11 +7,13 @@ import { Logo } from "@/components/brand/logo";
 import { StreakPill, XpPill } from "@/components/game/game-ui";
 import { useAppState } from "@/lib/app-state";
 import { liveStreak } from "@/lib/game/rules";
+import { PATH_ENABLED } from "@/lib/path/flag";
 import { cn } from "@/lib/utils";
 
 /** Desktop navigation. Phones use the bottom bar instead. */
 const NAV = [
   { href: "/practice", label: "Practice" },
+  ...(PATH_ENABLED ? [{ href: "/path", label: "Path" }] : []),
   { href: "/games", label: "Games" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/progress", label: "Progress" },

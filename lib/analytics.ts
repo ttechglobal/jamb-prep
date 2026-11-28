@@ -27,7 +27,12 @@ export type EventName =
   | "game_started"
   | "game_completed"
   | "install_accepted"
-  | "reminders_enabled";
+  | "reminders_enabled"
+  | "path_view"
+  | "path_unit_open"
+  | "path_choice"
+  | "path_star_earned"
+  | "path_check_started";
 
 const VISITOR_KEY = "jp:vid";
 
