@@ -6,6 +6,9 @@ export interface PathUnit {
   id: string;
   slug: string;
   name: string;
+  /** The syllabus theme this unit belongs to. Null for a topic nobody has grouped yet. */
+  theme: string | null;
+  themeOrder: number | null;
   questionCount: number;
   askedRank: number;
   syllabusRank: number;
@@ -36,6 +39,8 @@ export interface PathOverviewSubject {
   started: number;
   stars: number;
   maxStars: number;
+  /** One entry per unit in the student's order, for the dots on Home. */
+  trail: { stars: number; revisit: boolean }[];
   next: { id: string; name: string; index: number } | null;
 }
 

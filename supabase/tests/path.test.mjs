@@ -6,7 +6,7 @@ import postgres from "postgres";
 import { readFileSync } from "node:fs";
 
 const sql = postgres(process.env.SUPABASE_DB_URL, { max: 1, prepare: false, onnotice: () => {} });
-const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql", "20261128000003_path_units_other_subjects.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
+const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql", "20261128000003_path_units_other_subjects.sql", "20261128000004_path_themes_and_auto_units.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
 
 const U = {
   student: "00000000-0000-4000-8000-0000000000b1",
@@ -52,7 +52,9 @@ try {
     if (!first.t) await tx.unsafe(readFileSync(MIGRATIONS[0], "utf8"));
     if (!(await has("physics"))) await tx.unsafe(readFileSync(MIGRATIONS[1], "utf8"));
     if (!(await has("biology"))) await tx.unsafe(readFileSync(MIGRATIONS[2], "utf8"));
-    if (!first.t || !seeded) console.log("(some path migrations were not applied yet: ran them inside the test transaction)");
+    const [themed] = await tx`select count(*)::int as n from information_schema.columns where table_schema = 'public' and table_name = 'path_units' and column_name = 'theme'`;
+    if (!themed.n) await tx.unsafe(readFileSync(MIGRATIONS[3], "utf8"));
+    if (!first.t || !seeded || !themed.n) console.log("(some path migrations were not applied yet: ran them inside the test transaction)");
 
     for (const [key, id] of Object.entries(U)) {
       await tx`insert into auth.users (id, aud, role, email, is_anonymous)
@@ -122,6 +124,28 @@ try {
       check(`every ${subject} topic belongs to a unit`, loose === 0, loose);
       await as(U.student);
     }
+
+    // Themes -----------------------------------------------------------------
+    const bySyllabus = [...path0.units].sort((a, b) => a.syllabusRank - b.syllabusRank);
+    check("every Maths unit has a theme", path0.units.every((u) => u.theme), path0.units.filter((u) => !u.theme).map((u) => u.slug));
+    check("syllabus order keeps each theme together", bySyllabus.every((u, i) => i === 0 || u.themeOrder >= bySyllabus[i - 1].themeOrder), bySyllabus.map((u) => [u.slug, u.themeOrder]));
+    check("Maths has four themes", new Set(path0.units.map((u) => u.theme)).size === 4);
+    await asOwner();
+    const bare = await tx`select subject_id, slug from public.path_units where theme is null`;
+    check("every seeded unit has a theme", bare.length === 0, bare);
+
+    // New topics join the path on their own -----------------------------------
+    await tx`insert into public.topics (subject_id, slug, name, sort_order) values ('physics', 'zz-test-topic', 'Zz test topic', 999)`;
+    const [auto] = await tx`select pu.id, pu.theme, (select count(*)::int from public.path_unit_topics put where put.unit_id = pu.id) as topics
+                            from public.path_units pu where pu.subject_id = 'physics' and pu.slug = 'topic-zz-test-topic'`;
+    check("a new topic in a subject with a path gets its own unit", auto?.topics === 1 && auto.theme === null, auto);
+    await as(U.student);
+    check("a unit with no questions stays off the trail", (await rpc("get_path", ["physics"])).units.length === 14);
+    await asOwner();
+    await tx`insert into public.topics (subject_id, slug, name, sort_order) values ('english', 'zz-test-english', 'Zz test english', 999)`;
+    const [noAuto] = await tx`select count(*)::int as n from public.path_units where subject_id = 'english'`;
+    check("a subject with no path is left alone", noAuto.n === 0, noAuto.n);
+    await as(U.student);
 
     // Rounds -----------------------------------------------------------------
     const a = await play({ unitId: poly }, 5);
@@ -213,6 +237,7 @@ try {
     const maths = overview.subjects.find((s) => s.subjectId === "mathematics");
     check("overview counts units and stars", maths?.unitCount === 13 && maths.maxStars === 39 && maths.stars >= 4, maths);
     check("next up follows syllabus order and skips started units", maths?.next?.name === "Bases, sets, operations and matrices", maths?.next);
+    check("overview carries the whole trail", maths?.trail?.length === 13 && maths.trail.every((t) => typeof t.stars === "number"), maths?.trail?.length);
     await rpc("set_path_prefs", [null, "asked"]);
     const overview2 = await rpc("get_path_overview");
     check("changing the order keeps the mode", overview2.mode === "path" && overview2.order === "asked", overview2);

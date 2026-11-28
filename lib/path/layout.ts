@@ -1,13 +1,15 @@
 import type { PathCheckpoint, PathOrder, PathUnit } from "./types";
 
-/** A mixed check comes after this many units. */
+/** In "most asked" order, units are grouped in fives. */
 export const SECTION_SIZE = 5;
+/** A section gets a mixed check once it has at least this many units. */
+export const CHECK_MIN_UNITS = 3;
 
 export interface PathSection {
   index: number;
   title: string;
   units: PathUnit[];
-  /** The mixed check at the end of the section. Only full sections have one. */
+  /** The mixed check at the end of the section. */
   check: { unitIds: string[]; done: boolean } | null;
 }
 
@@ -17,30 +19,44 @@ export function orderUnits(units: PathUnit[], order: PathOrder): PathUnit[] {
   return [...units].sort((a, b) => rank(a, order) - rank(b, order));
 }
 
-function sectionTitle(index: number, order: PathOrder) {
-  if (order === "syllabus") return `Part ${index + 1}`;
-  return ["Most asked", "Often asked", "Rounding out"][index] ?? `Part ${index + 1}`;
+function askedTitle(index: number) {
+  return ["Most asked", "Often asked", "Rounding out"][index] ?? `More topics ${index - 2}`;
 }
 
-/** Splits the ordered units into sections of five, marking which mixed checks are already done. */
+/**
+ * Splits the ordered units into sections. Syllabus order follows the syllabus themes ("Algebra"), and
+ * a topic nobody has themed yet lands under "More topics". Most-asked order is groups of five.
+ */
 export function buildSections(units: PathUnit[], order: PathOrder, checkpoints: PathCheckpoint[]): PathSection[] {
   const ordered = orderUnits(units, order);
-  const sections: PathSection[] = [];
-  for (let i = 0; i < ordered.length; i += SECTION_SIZE) {
-    const chunk = ordered.slice(i, i + SECTION_SIZE);
-    const ids = chunk.map((u) => u.id);
+  const groups: { title: string; units: PathUnit[] }[] = [];
+
+  if (order === "syllabus") {
+    for (const unit of ordered) {
+      const title = unit.theme ?? "More topics";
+      const last = groups[groups.length - 1];
+      if (last && last.title === title) last.units.push(unit);
+      else groups.push({ title, units: [unit] });
+    }
+  } else {
+    for (let i = 0; i < ordered.length; i += SECTION_SIZE) {
+      groups.push({ title: askedTitle(groups.length), units: ordered.slice(i, i + SECTION_SIZE) });
+    }
+  }
+
+  return groups.map((group, index) => {
+    const ids = group.units.map((u) => u.id);
     const key = [...ids].sort().join(",");
-    sections.push({
-      index: sections.length,
-      title: sectionTitle(sections.length, order),
-      units: chunk,
+    return {
+      index,
+      title: group.title,
+      units: group.units,
       check:
-        chunk.length === SECTION_SIZE
+        group.units.length >= CHECK_MIN_UNITS
           ? { unitIds: ids, done: checkpoints.some((c) => [...c.unitIds].sort().join(",") === key) }
           : null,
-    });
-  }
-  return sections;
+    };
+  });
 }
 
 /** The first unit with no stars, else the first still short of three. Null once every unit has three. */

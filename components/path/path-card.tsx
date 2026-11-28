@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { Play, Route } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Meter, SubjectIcon } from "@/components/game/game-ui";
+import { SubjectIcon } from "@/components/game/game-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { useAppState } from "@/lib/app-state";
 import { SUBJECTS } from "@/lib/catalog";
 import { getPathOverview } from "@/lib/path/client";
 import { PATH_ENABLED } from "@/lib/path/flag";
-import type { PathOverview } from "@/lib/path/types";
+import type { PathOverview, PathOverviewSubject } from "@/lib/path/types";
 import { cn } from "@/lib/utils";
 
 /**
@@ -33,9 +33,11 @@ export function PathCard({ className }: { className?: string }) {
 
   if (!PATH_ENABLED || !overview || !profile) return null;
 
+  // The subject being worked on comes first (most topics started), then the usual subject order.
   const mine = profile.subjectIds
     .map((id) => overview.subjects.find((s) => s.subjectId === id))
-    .filter((s): s is NonNullable<typeof s> => Boolean(s));
+    .filter((s): s is NonNullable<typeof s> => Boolean(s))
+    .sort((a, b) => b.started - a.started || SUBJECTS.findIndex((s) => s.id === a.subjectId) - SUBJECTS.findIndex((s) => s.id === b.subjectId));
   const current = mine.find((s) => s.next) ?? null;
   if (mine.length === 0) return null;
 
@@ -73,13 +75,13 @@ export function PathCard({ className }: { className?: string }) {
             <SubjectIcon id={current.subjectId} className="size-5 rounded-md" iconClassName="size-3" />
             YOUR PATH · {subject?.shortName.toUpperCase()}
           </p>
-          <p className="truncate font-display text-2xl leading-tight font-semibold">{current.next.name}</p>
+          <p className="line-clamp-2 font-display text-2xl leading-tight font-semibold">{current.next.name}</p>
           <p className="text-xs text-muted-foreground">
             Topic {current.next.index} of {current.unitCount}
           </p>
         </div>
       </div>
-      <Meter percent={(current.stars / Math.max(current.maxStars, 1)) * 100} label="Stars earned on this path" className="mt-3" />
+      <TrailDots trail={current.trail} nextIndex={current.next.index} />
       <Link
         href={`/path?s=${current.subjectId}&open=${current.next.id}`}
         className={buttonVariants({ variant: "gold", size: "xl", className: "mt-3 w-full" })}
@@ -87,5 +89,34 @@ export function PathCard({ className }: { className?: string }) {
         Continue
       </Link>
     </section>
+  );
+}
+
+/** A preview of the whole trail: one dot per topic. Gold is solid, green has stars, orange needs a revisit, purple is next. */
+function TrailDots({ trail, nextIndex }: { trail: PathOverviewSubject["trail"]; nextIndex: number }) {
+  return (
+    <ol aria-label="Your trail" className="mt-3.5 flex flex-wrap items-center gap-1.5">
+      {trail.map((t, i) => {
+        const isNext = i + 1 === nextIndex;
+        const label = isNext ? "Next up" : t.revisit ? "Revisit" : t.stars === 0 ? "Not started" : `${t.stars} of 3 stars`;
+        return (
+          <li
+            key={i}
+            title={label}
+            className={cn(
+              "shrink-0 rounded-full",
+              isNext
+                ? "size-6 border-4 border-[#DDD6FE] bg-violet"
+                : cn(
+                    "size-3.5",
+                    t.revisit ? "bg-[#FB923C]" : t.stars >= 3 ? "bg-gold" : t.stars > 0 ? "bg-brand-bright" : "bg-border",
+                  ),
+            )}
+          >
+            <span className="sr-only">{`Topic ${i + 1}: ${label}`}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

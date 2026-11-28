@@ -88,7 +88,7 @@ export function UnitSheet({
               </div>
             </div>
             <DialogDescription className="text-sm leading-snug text-muted-foreground">
-              Ten questions drawn from the five topics in this section. A good test of what has stuck.
+              Ten questions drawn from the topics in this section. A good test of what has stuck.
             </DialogDescription>
             <ul className="flex flex-wrap gap-1.5">
               {target.names.map((n) => (
