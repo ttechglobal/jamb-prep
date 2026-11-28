@@ -30,18 +30,26 @@ export function usingEnvPassword() {
   return readEnvPassword().password !== null;
 }
 
-/** Checks a typed password against ADMIN_PASSWORD, with a lockout after repeated wrong guesses. */
-export function verifyEnvPassword(given: string): "ok" | "wrong" | "locked" | "not_configured" | "too_short" {
+/**
+ * Checks a typed password against ADMIN_PASSWORD, with a lockout after repeated wrong guesses. The guesses are counted
+ * in the database, so the lockout holds across every server instance. If the database cannot be reached (or its
+ * functions are not applied yet) the count falls back to this server's memory, so sign-in still has a lockout.
+ */
+export async function verifyEnvPassword(given: string): Promise<"ok" | "wrong" | "locked" | "not_configured" | "too_short"> {
   const { password, problem } = readEnvPassword();
   if (problem === "too_short") return "too_short";
   if (!password) return "not_configured";
-  if (limiter.locked()) return "locked";
-  if (passwordMatches(given, password)) {
-    limiter.ok();
-    return "ok";
-  }
-  limiter.fail();
-  return "wrong";
+
+  const db = adminDb();
+  const gate = await db.rpc("admin_login_locked");
+  const shared = !gate.error;
+  if (shared ? gate.data === true : limiter.locked()) return "locked";
+
+  const ok = passwordMatches(given, password);
+  if (shared) await db.rpc("admin_login_result", { p_ok: ok });
+  else if (ok) limiter.ok();
+  else limiter.fail();
+  return ok ? "ok" : "wrong";
 }
 
 async function passwordHash() {

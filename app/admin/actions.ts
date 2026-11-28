@@ -17,7 +17,7 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
   const given = String(form.get("password") ?? "").trim();
   // A password in .env.local replaces the database one.
   if (usingEnvPassword() || readEnvPassword().problem) {
-    const result = verifyEnvPassword(given);
+    const result = await verifyEnvPassword(given);
     if (result === "too_short") return { error: "ADMIN_PASSWORD in .env.local is shorter than 8 characters, so it can't be used." };
     if (result === "locked") return { error: "Too many wrong tries. Wait 15 minutes." };
     if (result !== "ok") return { error: "That password is not right." };

@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { adminDb } from "@/lib/admin/auth";
 import { sendPush } from "@/lib/push/send";
 
@@ -19,7 +20,9 @@ const promiseText = (kind: DueReminder["promise_kind"], amount: number | null) =
 
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("x-cron-secret") !== secret) return Response.json({ error: "unauthorized" }, { status: 401 });
+  const given = Buffer.from(request.headers.get("x-cron-secret") ?? "");
+  const expected = Buffer.from(secret ?? "");
+  if (!secret || given.length !== expected.length || !timingSafeEqual(given, expected)) return Response.json({ error: "unauthorized" }, { status: 401 });
 
   const db = adminDb();
   const [reminders, alerts] = await Promise.all([db.rpc("study_reminders_due"), db.rpc("partner_alerts_due")]);
