@@ -6,7 +6,7 @@ import postgres from "postgres";
 import { readFileSync } from "node:fs";
 
 const sql = postgres(process.env.SUPABASE_DB_URL, { max: 1, prepare: false, onnotice: () => {} });
-const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql", "20261128000003_path_units_other_subjects.sql", "20261128000004_path_themes_and_auto_units.sql", "20261128000005_path_units_crk_government_literature.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
+const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql", "20261128000003_path_units_other_subjects.sql", "20261128000004_path_themes_and_auto_units.sql", "20261128000005_path_units_crk_government_literature.sql", "20261128000006_path_units_english.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
 
 const U = {
   student: "00000000-0000-4000-8000-0000000000b1",
@@ -55,7 +55,8 @@ try {
     const [themed] = await tx`select count(*)::int as n from information_schema.columns where table_schema = 'public' and table_name = 'path_units' and column_name = 'theme'`;
     if (!themed.n) await tx.unsafe(readFileSync(MIGRATIONS[3], "utf8"));
     if (!(await has("crk"))) await tx.unsafe(readFileSync(MIGRATIONS[4], "utf8"));
-    if (!first.t || !seeded || !themed.n || !(await has("crk"))) console.log("(some path migrations were not applied yet: ran them inside the test transaction)");
+    if (!(await has("english"))) await tx.unsafe(readFileSync(MIGRATIONS[5], "utf8"));
+    if (!first.t || !seeded || !themed.n || !(await has("crk")) || !(await has("english"))) console.log("(some path migrations were not applied yet: ran them inside the test transaction)");
 
     for (const [key, id] of Object.entries(U)) {
       await tx`insert into auth.users (id, aud, role, email, is_anonymous)
@@ -111,12 +112,12 @@ try {
     check("every unit holds at least 15 questions", path0.units.every((u) => u.questionCount >= 15), path0.units.map((u) => [u.slug, u.questionCount]).filter(([, n]) => n < 15));
     check("a new student has no stars", path0.units.every((u) => u.stars === 0 && u.answers === 0));
     const english = await rpc("get_path", ["english"]);
-    check("English has no units yet", english.units.length === 0);
+    check("English shows two units, with Oral Forms off the trail until it has 5 questions", english.units.length === 2 && english.units.every((u) => u.slug !== "oral-forms"), english.units.map((u) => [u.slug, u.questionCount]));
     const topics = await tx`select topic_id from public.path_unit_topics put join public.path_units pu on pu.id = put.unit_id where pu.subject_id = 'mathematics'`;
     check("all 23 Maths topics are in a unit", topics.length === 23, topics.length);
 
     // Every other seeded subject: every active topic sits in a unit, and every unit can carry rounds on two days.
-    for (const [subject, units, min] of [["physics", 14, 20], ["chemistry", 10, 20], ["biology", 9, 20], ["accounting", 10, 20], ["commerce", 10, 20], ["economics", 10, 20], ["crk", 11, 20], ["government", 12, 20], ["literature", 2, 15]]) {
+    for (const [subject, units, min] of [["physics", 14, 20], ["chemistry", 10, 20], ["biology", 9, 20], ["accounting", 10, 20], ["commerce", 10, 20], ["economics", 10, 20], ["crk", 11, 20], ["government", 12, 20], ["literature", 2, 15], ["english", 2, 20]]) {
       const p = await rpc("get_path", [subject]);
       check(`${subject} has ${units} units`, p.units.length === units, p.units.length);
       check(`every ${subject} unit holds at least ${min} questions`, p.units.every((u) => u.questionCount >= min), p.units.filter((u) => u.questionCount < min).map((u) => [u.slug, u.questionCount]));
@@ -143,8 +144,8 @@ try {
     await as(U.student);
     check("a unit with no questions stays off the trail", (await rpc("get_path", ["physics"])).units.length === 14);
     await asOwner();
-    await tx`insert into public.topics (subject_id, slug, name, sort_order) values ('english', 'zz-test-english', 'Zz test english', 999)`;
-    const [noAuto] = await tx`select count(*)::int as n from public.path_units where subject_id = 'english'`;
+    await tx`insert into public.topics (subject_id, slug, name, sort_order) values ('geography', 'zz-test-geography', 'Zz test geography', 999)`;
+    const [noAuto] = await tx`select count(*)::int as n from public.path_units where subject_id = 'geography'`;
     check("a subject with no path is left alone", noAuto.n === 0, noAuto.n);
     await as(U.student);
 

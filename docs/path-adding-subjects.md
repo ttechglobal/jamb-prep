@@ -38,4 +38,4 @@ Units are rows. To move a topic, update `path_unit_topics.unit_id`. To rename or
 
 ## Subjects not ready yet
 
-A subject with no units shows "Coming soon". English, Literature, CRK and Government wait on their questions being tagged to enough topics; see [path-question-audit.md](path-question-audit.md).
+A subject with no units shows "Coming soon". English has a short path (Comprehension, Lexis and Structure; Oral Forms joins once it has 5 questions). Regroup into more units as questions are added and tagged to subtopics; see [path-question-audit.md](path-question-audit.md).
