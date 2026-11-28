@@ -16,7 +16,6 @@ const NAV = [
   ...(PATH_ENABLED ? [{ href: "/path", label: "Path" }] : []),
   { href: "/games", label: "Games" },
   { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/progress", label: "Progress" },
 ];
 
 export function AppHeader() {
@@ -49,7 +48,7 @@ export function AppHeader() {
           <XpPill xp={progress.xp} />
           <Link
             href="/settings"
-            aria-label="Account settings"
+            aria-label="Your profile and progress"
             className="ml-1 grid size-10 place-items-center rounded-full border-2 border-b-4 border-primary bg-secondary font-display font-semibold text-secondary-foreground transition hover:brightness-95"
           >
             {initial}

@@ -63,23 +63,11 @@ function PathArt() {
   );
 }
 
-function ProgressArt() {
-  return (
-    <svg viewBox="0 0 48 48" className="size-full" aria-hidden>
-      <rect x="5" y="27" width="10" height="15" rx="2.500" fill="#38BDF8" {...stroke} />
-      <rect x="19" y="18" width="10" height="24" rx="2.500" fill="#22C55E" {...stroke} />
-      <rect x="33" y="8" width="10" height="34" rx="2.500" fill="#FACC15" {...stroke} />
-      <path d="M8 20l9-7 8 3 10-9" fill="none" stroke="#F87171" strokeWidth="2.600" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 const TABS = [
   { href: "/practice", label: "Practice", Art: PracticeArt },
   ...(PATH_ENABLED ? [{ href: "/path", label: "Path", Art: PathArt }] : []),
   { href: "/games", label: "Games", Art: GamesArt },
   { href: "/leaderboard", label: "Ranks", Art: RanksArt },
-  { href: "/progress", label: "Progress", Art: ProgressArt },
 ];
 
 /** While someone is playing a game level the bar steps aside, like it does in a practice round. */
@@ -93,7 +81,7 @@ export function BottomNav() {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-30 border-t-2 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
     >
-      <ul className={cn("mx-auto grid max-w-md gap-1 px-2 pt-1.5 pb-1.5", TABS.length > 4 ? "grid-cols-5" : "grid-cols-4")}>
+      <ul className={cn("mx-auto grid max-w-md gap-1 px-2 pt-1.5 pb-1.5", TABS.length > 4 ? "grid-cols-5" : TABS.length === 4 ? "grid-cols-4" : "grid-cols-3")}>
         {TABS.map(({ href, label, Art }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (

@@ -46,3 +46,30 @@ export function problemWith(times: StudyTime[]): string | null {
   }
   return null;
 }
+
+/** Quick choices for when in the day. Each is just a starting time the student can still change. */
+export const TIME_OF_DAY: { label: string; time: string }[] = [
+  { label: "Early morning", time: "06:00" },
+  { label: "After school", time: "16:00" },
+  { label: "Evening", time: "19:00" },
+  { label: "Night", time: "21:00" },
+];
+
+/** The study time that comes next from `now`, as words like "Today, 6:00 pm", or null when there are none. */
+export function nextStudyLabel(times: StudyTime[], now = new Date()): string | null {
+  let best: { at: number; text: string } | null = null;
+  for (const t of times) {
+    const [h, m] = t.time.split(":").map(Number);
+    for (let ahead = 0; ahead < 8; ahead++) {
+      const day = new Date(now);
+      day.setDate(now.getDate() + ahead);
+      day.setHours(h, m, 0, 0);
+      const iso = day.getDay() === 0 ? 7 : day.getDay();
+      if (day.getTime() <= now.getTime() || !t.days.includes(iso)) continue;
+      const when = ahead === 0 ? "Today" : ahead === 1 ? "Tomorrow" : DAY_SHORT[iso - 1];
+      if (!best || day.getTime() < best.at) best = { at: day.getTime(), text: `${when}, ${timeLabel(t.time)}` };
+      break;
+    }
+  }
+  return best?.text ?? null;
+}

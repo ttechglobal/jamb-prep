@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SubjectIcon } from "@/components/game/game-ui";
 import { DeviceSettings } from "@/components/pwa/device-settings";
+import { ProgressSection } from "@/components/progress/progress-section";
 import { StudyTimes } from "@/components/study/study-times";
 import { SubjectPicker, isValidSubjectSelection } from "@/components/profile/subject-picker";
 import { SubjectTargets } from "@/components/profile/subject-targets";
@@ -32,13 +33,72 @@ function Settings() {
   const { account, profile } = useAppState();
   const edit = useSearchParams().get("edit");
   if (!account || !profile) return null;
-  return <SettingsForm email={accountLabel(account.email)} profile={profile} startWith={edit === "targets" ? "targets" : null} />;
+  return (
+    <ProfileTabs
+      // Arriving to change something (the score, the study times) opens Settings; otherwise progress comes first.
+      startOn={edit ? "settings" : "progress"}
+      email={accountLabel(account.email)}
+      profile={profile}
+      startWith={edit === "targets" ? "targets" : null}
+      editStudy={edit === "study"}
+    />
+  );
+}
+
+type Tab = "progress" | "settings";
+
+/** The profile: how practice is going, and the settings behind it. */
+function ProfileTabs({
+  startOn,
+  email,
+  profile,
+  startWith,
+  editStudy,
+}: {
+  startOn: Tab;
+  email: string;
+  profile: Profile;
+  startWith: Section | null;
+  editStudy: boolean;
+}) {
+  const [tab, setTab] = useState<Tab>(startOn);
+  return (
+    <div className="mx-auto max-w-3xl">
+      <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">{profile.displayName.trim().split(/\s+/)[0]}</h1>
+      <div role="tablist" aria-label="Profile" className="mt-3 grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1">
+        {(["progress", "settings"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            role="tab"
+            id={`tab-${t}`}
+            aria-selected={tab === t}
+            aria-controls={`panel-${t}`}
+            onClick={() => setTab(t)}
+            className={cn(
+              "h-11 rounded-xl font-display text-base font-semibold capitalize transition-colors",
+              tab === t ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+            )}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="mt-4">
+        {tab === "progress" ? (
+          <ProgressSection />
+        ) : (
+          <SettingsForm email={email} profile={profile} startWith={startWith} editStudy={editStudy} />
+        )}
+      </div>
+    </div>
+  );
 }
 
 type Section = "name" | "subjects" | "targets";
 
 /** Shows each setting as plain text. Tapping Edit opens just that one, so nothing is editable by accident. */
-function SettingsForm({ email, profile, startWith }: { email: string; profile: Profile; startWith: Section | null }) {
+function SettingsForm({ email, profile, startWith, editStudy }: { email: string; profile: Profile; startWith: Section | null; editStudy: boolean }) {
   const router = useRouter();
   const { saveProfile, signOut } = useAppState();
   const [name, setName] = useState(profile.displayName);
@@ -89,7 +149,6 @@ function SettingsForm({ email, profile, startWith }: { email: string; profile: P
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <h1 className="text-3xl font-semibold">Your profile</h1>
 
       <section className="game-card p-4" aria-labelledby="name-title">
         <SectionHeader id="name-title" title="Display name" editing={open.name} onToggle={() => toggle("name")} />
@@ -149,7 +208,7 @@ function SettingsForm({ email, profile, startWith }: { email: string; profile: P
         )}
       </section>
 
-      <StudyTimes />
+      <StudyTimes startEditing={editStudy} />
 
       <DeviceSettings />
 
