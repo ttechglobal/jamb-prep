@@ -10,12 +10,15 @@ export const DAILY_GOAL_QUESTIONS = 15;
 /** Rounds a guest can start before they must create an account. */
 export const GUEST_FREE_ROUNDS = 2;
 
-const TITLES = [
+/** Ranks, from the level each one starts at. A student keeps a rank until the next one begins. */
+export const RANKS = [
   { from: 1, title: "Aspirant" },
   { from: 3, title: "Candidate" },
-  { from: 5, title: "Scholar" },
-  { from: 8, title: "Ace" },
-  { from: 11, title: "Legend" },
+  { from: 6, title: "Scholar" },
+  { from: 10, title: "Prefect" },
+  { from: 15, title: "Ace" },
+  { from: 20, title: "Distinction" },
+  { from: 30, title: "Legend" },
 ];
 
 export const emptyProgress = (): PlayerProgress => ({
@@ -40,16 +43,30 @@ function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 }
 
-/** Total XP needed to reach a level: each level takes 100 XP more than the last. */
-export const xpForLevel = (level: number) => 50 * level * (level - 1);
+/**
+ * Total XP needed to reach a level. The first levels come quickly (level 2 is 50 XP, about two rounds) so a new
+ * student is rewarded early, then each level asks for 20 XP more than the one before: 50, 70, 90, 110...
+ * Level 10 is 1,170 XP and level 30 is 9,570 XP.
+ */
+export const xpForLevel = (level: number) => 10 * (level - 1) * (level + 3);
 
 export function levelFor(xp: number) {
   let level = 1;
   while (xp >= xpForLevel(level + 1)) level++;
   const floor = xpForLevel(level);
   const next = xpForLevel(level + 1);
-  const title = [...TITLES].reverse().find((t) => level >= t.from)?.title ?? TITLES[0].title;
-  return { level, title, floor, next, toNext: next - xp, percent: Math.round(((xp - floor) / (next - floor)) * 100) };
+  const rank = [...RANKS].reverse().find((t) => level >= t.from) ?? RANKS[0];
+  const nextRank = RANKS.find((t) => t.from > level) ?? null;
+  return {
+    level,
+    title: rank.title,
+    /** The next rank and the level it begins at, or null at the top. */
+    nextRank,
+    floor,
+    next,
+    toNext: next - xp,
+    percent: Math.round(((xp - floor) / (next - floor)) * 100),
+  };
 }
 
 export function starsFor(accuracy: number): SessionReward["stars"] {

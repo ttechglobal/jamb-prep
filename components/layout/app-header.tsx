@@ -30,8 +30,8 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-30 border-b-2 bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-15 max-w-5xl items-center gap-5 px-4">
-        <Logo href="/practice" compact />
-        <nav aria-label="Main" className="hidden items-center gap-1 sm:flex">
+        <Logo href="/practice" compact className="lg:hidden" />
+        <nav aria-label="Main" className="hidden items-center gap-1 sm:flex lg:hidden">
           {NAV.map((item) => (
             <Link
               key={item.href}

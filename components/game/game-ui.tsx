@@ -98,6 +98,11 @@ export function LevelBar({ xp, className }: { xp: number; className?: string }) 
           </p>
         </div>
         <Meter percent={lvl.percent} label={`Progress to level ${lvl.level + 1}`} className="mt-1.5" />
+        {lvl.nextRank ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Next rank: {lvl.nextRank.title}, at level {lvl.nextRank.from}
+          </p>
+        ) : null}
       </div>
     </div>
   );

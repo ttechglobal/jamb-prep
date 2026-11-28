@@ -74,7 +74,19 @@ function ReadArt() {
   );
 }
 
-const TABS = [
+export function StudyArt() {
+  return (
+    <svg viewBox="0 0 48 48" className="size-full" aria-hidden>
+      <rect x="20" y="4" width="8" height="5" rx="1.500" fill="#8B5CF6" {...stroke} />
+      <path d="M36 12l3-3" {...stroke} />
+      <circle cx="24" cy="27" r="16" fill="#FACC15" {...stroke} />
+      <circle cx="24" cy="27" r="10.500" fill="#FFF7D6" {...stroke} strokeWidth={1.8} />
+      <path d="M24 27V19M24 27l5 3" fill="none" {...stroke} />
+    </svg>
+  );
+}
+
+export const TABS = [
   { href: "/practice", label: "Practice", Art: PracticeArt },
   ...(PATH_ENABLED ? [{ href: "/path", label: "Path", Art: PathArt }] : []),
   { href: "/read", label: "Read", Art: ReadArt },

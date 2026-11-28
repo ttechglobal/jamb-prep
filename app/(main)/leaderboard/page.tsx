@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { trackOnce } from "@/lib/analytics";
 import { MINUTE, cached } from "@/lib/cache";
 import { useAppState } from "@/lib/app-state";
+import { levelFor } from "@/lib/game/rules";
 import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -143,12 +144,12 @@ export default function LeaderboardPage() {
         <>
           <ol className="game-card overflow-hidden">
             {board.rows.map((r, i) => (
-              <RowItem key={`${r.rank}-${i}`} row={r} first={i === 0} />
+              <RowItem key={`${r.rank}-${i}`} row={r} first={i === 0} showRank={period === "all"} />
             ))}
           </ol>
           {showMine ? (
             <ol className="game-card mt-3 overflow-hidden">
-              <RowItem row={{ rank: board.meRank!, name: "You", xp: board.meXp ?? 0, me: true }} first />
+              <RowItem row={{ rank: board.meRank!, name: "You", xp: board.meXp ?? 0, me: true }} first showRank={period === "all"} />
             </ol>
           ) : null}
           {period === "week" ? <p className="mt-2 text-xs text-muted-foreground">Resets every Monday.</p> : null}
@@ -168,7 +169,7 @@ export default function LeaderboardPage() {
   );
 }
 
-function RowItem({ row, first }: { row: Row; first: boolean }) {
+function RowItem({ row, first, showRank }: { row: Row; first: boolean; showRank?: boolean }) {
   return (
     <li className={cn("flex items-center gap-3 px-4 py-2.5", !first && "border-t border-border", row.me && "bg-secondary")}>
       <span
@@ -182,6 +183,11 @@ function RowItem({ row, first }: { row: Row; first: boolean }) {
       <span className="min-w-0 flex-1 truncate font-semibold">
         {row.name}
         {row.me && row.name !== "You" ? <span className="ml-1.5 text-xs font-semibold text-primary">(you)</span> : null}
+        {showRank ? (
+          <span className="block text-xs font-medium text-muted-foreground">
+            Level {levelFor(row.xp).level} · {levelFor(row.xp).title}
+          </span>
+        ) : null}
       </span>
       <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gold-soft px-2.5 py-0.5 font-display text-sm font-semibold text-gold-ink">
         <Zap className="size-3.5 fill-gold text-gold-edge" aria-hidden />
