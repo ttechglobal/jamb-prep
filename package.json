@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:push": "node --env-file=.env.local scripts/db-push.mjs",
     "db:test": "node --env-file=.env.local supabase/tests/engine.test.mjs",
+    "db:test:path": "node --env-file=.env.local supabase/tests/path.test.mjs",
     "db:test:offline": "node --env-file=.env.local supabase/tests/offline.test.mjs",
     "db:check": "node --env-file=.env.local scripts/check-bank.mjs",
     "bank:gaps": "node --disable-warning=ExperimentalWarning --env-file=.env.local scripts/gap-report.mjs",
