@@ -3,6 +3,7 @@
 import type { AuthError, Session } from "@supabase/supabase-js";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { clearUserCache } from "@/lib/cache";
 import { data } from "@/lib/data";
 import { emptyProgress } from "@/lib/game/rules";
 import { releaseReminders } from "@/lib/pwa/push";
@@ -82,7 +83,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     currentSession().then((session) => {
       if (!cancelled) void load(session);
     });
-    const { data: listener } = supabase().auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase().auth.onAuthStateChange((event, session) => {
+      // Saved answers belong to whoever was signed in. A refreshed token is the same person, so it keeps them.
+      if (event !== "TOKEN_REFRESHED" && event !== "INITIAL_SESSION") clearUserCache();
       // Supabase holds a lock during this callback, so its own calls must wait until it ends.
       setTimeout(() => void load(session), 0);
     });
@@ -139,6 +142,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       async signOut() {
         await releaseReminders();
         await supabase().auth.signOut({ scope: "local" });
+        clearUserCache();
         await load(null);
         setProfile(null);
         setProgress(emptyProgress());

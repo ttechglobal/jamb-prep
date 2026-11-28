@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LessonBlocks } from "@/components/read/lesson-blocks";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,6 +49,10 @@ export default function ReaderPage() {
         <Skeleton className="h-64 w-full" />
       </div>
     );
+  }
+
+  if (lesson.format === "embed") {
+    return <EmbedReader lesson={lesson} topicId={topic?.id ?? null} />;
   }
 
   const sections = lesson.sections;
@@ -113,6 +117,47 @@ export default function ReaderPage() {
         >
           {topic ? "Skip to practice on this topic" : "Skip to practice"}
         </button>
+      ) : null}
+    </div>
+  );
+}
+
+/** A Read & Learn lesson in EXL's own reader, in a sandboxed frame. Our button sits under it. */
+function EmbedReader({ lesson, topicId }: { lesson: ReadLesson; topicId: string | null }) {
+  const { start, starting } = useStartSession();
+  const [done, setDone] = useState(false);
+  const frame = useRef<HTMLIFrameElement>(null);
+
+  // The lesson tells us when the student reaches the end, so the practice button can step forward.
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.source !== frame.current?.contentWindow) return;
+      const m = e.data as { source?: string; type?: string };
+      if (m?.source === "exl-lesson" && (m.type === "complete" || m.type === "finish")) setDone(true);
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
+  const practise = () => lesson.subjectId && start(subjectPractice(lesson.subjectId, topicId, 10));
+  return (
+    <div className="mx-auto max-w-2xl">
+      <Link href="/read" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="size-4" aria-hidden /> All notes
+      </Link>
+      <h1 className="text-2xl font-semibold leading-tight sm:text-3xl">{lesson.title}</h1>
+      <iframe
+        ref={frame}
+        title={lesson.title}
+        src={`/api/read/embed/${lesson.id}`}
+        // No sandbox attribute: the page itself arrives with a CSP sandbox header (scripts only, no access to this app).
+        className="mt-3 h-[70dvh] min-h-[28rem] w-full rounded-2xl border-2 bg-card"
+      />
+      {lesson.subjectId ? (
+        <Button size="xl" variant={done ? "gold" : "outline"} className="mt-3 w-full" disabled={starting} onClick={practise}>
+          {starting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+          {topicId ? "Practise this topic" : "Practise this subject"}
+        </Button>
       ) : null}
     </div>
   );

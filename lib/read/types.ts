@@ -9,6 +9,8 @@ export type ReadLessonSummary = {
   minutes: number | null;
   /** The EXL topic or subtopic this lesson sits under. Used to find the matching JAMB topic. */
   topicTitle: string;
+  /** "embed" lessons are shown in EXL's own reader; "notes" are rendered here from lesson data. */
+  format: "embed" | "notes";
 };
 
 export type ReadTopic = { id: string; title: string; lessons: ReadLessonSummary[] };
@@ -38,6 +40,7 @@ export type ReadLesson = {
   title: string;
   description: string;
   minutes: number | null;
+  format: "embed" | "notes";
   subjectSlug: string;
   subjectId: string | null;
   topicTitle: string;

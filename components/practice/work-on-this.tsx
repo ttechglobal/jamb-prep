@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { SubjectIcon } from "@/components/game/game-ui";
 import { Button } from "@/components/ui/button";
 import { useStartSession } from "@/hooks/use-start-session";
+import { MINUTE, cached } from "@/lib/cache";
 import { track } from "@/lib/analytics";
 import { useAppState } from "@/lib/app-state";
 import { SUBJECTS } from "@/lib/catalog";
@@ -34,13 +35,17 @@ export function WorkOnThis() {
   useEffect(() => {
     if (isGuest) return;
     let live = true;
-    supabase()
-      .rpc("get_topic_trends")
-      .then(({ data, error }) => {
-        if (!live || error || !Array.isArray(data) || data.length === 0) return;
-        setTrends(data as Trend[]);
+    cached("user:trends", 5 * MINUTE, async () => {
+      const { data, error } = await supabase().rpc("get_topic_trends");
+      if (error) throw error;
+      return Array.isArray(data) ? (data as Trend[]) : [];
+    })
+      .then((data) => {
+        if (!live || data.length === 0) return;
+        setTrends(data);
         void track("needs_work_shown", { count: data.length });
-      });
+      })
+      .catch(() => {});
     return () => {
       live = false;
     };

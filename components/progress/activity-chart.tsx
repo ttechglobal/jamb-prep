@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MINUTE, cached } from "@/lib/cache";
 import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -36,11 +37,13 @@ export function ActivityChart() {
 
   useEffect(() => {
     let live = true;
-    supabase()
-      .rpc("get_activity", { p_days: 30 })
-      .then(({ data, error }) => {
-        if (live && !error && Array.isArray(data)) setDays(data as Day[]);
-      });
+    cached("user:activity", 5 * MINUTE, async () => {
+      const { data, error } = await supabase().rpc("get_activity", { p_days: 30 });
+      if (error || !Array.isArray(data)) throw error ?? new Error("activity");
+      return data as Day[];
+    })
+      .then((data) => live && setDays(data))
+      .catch(() => {});
     return () => {
       live = false;
     };

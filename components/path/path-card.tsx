@@ -41,54 +41,56 @@ export function PathCard({ className }: { className?: string }) {
   const current = mine.find((s) => s.next) ?? null;
   if (mine.length === 0) return null;
 
-  if (overview.mode !== "path" || !current?.next) {
+  // Every student gets the same door. It is never hidden, and a student who chose "Just practise" still sees it.
+  if (!current?.next) {
     return (
-      <section aria-label="Your path" className={cn("game-card flex items-center gap-3 border-violet/30 bg-violet-soft/40 p-4", className)}>
+      <Link
+        href="/path"
+        aria-label="Your path"
+        className={cn("game-card game-tap flex items-center gap-3 border-violet/30 bg-violet-soft/40 p-4", className)}
+      >
         <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-2xl bg-violet-soft text-violet">
           <Route className="size-6" strokeWidth={2.2} />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-lg font-semibold leading-tight">Your path</p>
-          <p className="text-sm text-muted-foreground">
-            {overview.mode === "practice" ? "Start whenever you like. Your practice already counts." : "Go topic by topic and earn stars."}
-          </p>
-        </div>
-        <Link href="/path" className={buttonVariants({ variant: "outline", size: "lg" })}>
-          See it
-        </Link>
-      </section>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg font-semibold leading-tight">Your path</span>
+          <span className="block text-sm text-muted-foreground">Every topic is solid. Revisit any of them.</span>
+        </span>
+        <span className={buttonVariants({ variant: "outline", size: "lg" })}>See it</span>
+      </Link>
     );
   }
 
   const subject = SUBJECTS.find((s) => s.id === current.subjectId);
+  // A student who has not answered anything on the path yet is new to it: say where to start.
+  const fresh = current.started === 0;
   return (
-    <section aria-label="Your path" className={cn("game-card border-violet/40 bg-violet-soft/40 p-4", className)}>
-      <div className="flex items-center gap-3">
+    <Link
+      href={`/path?s=${current.subjectId}&open=${current.next.id}`}
+      aria-label={`${fresh ? "Start" : "Continue"} your path: ${current.next.name}`}
+      className={cn("game-card game-tap block border-violet/40 bg-violet-soft/40 p-4", className)}
+    >
+      <span className="flex items-center gap-3">
         <span
           aria-hidden
           className="grid size-14 shrink-0 place-items-center rounded-full border-b-[5px] border-[#4C1D95] bg-violet text-white shadow-[0_0_0_5px_#DDD6FE]"
         >
           <Play className="ml-0.5 size-6 fill-current" />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-1.5 font-display text-xs font-semibold tracking-wide text-violet">
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-1.5 font-display text-xs font-semibold tracking-wide text-violet">
             <SubjectIcon id={current.subjectId} className="size-5 rounded-md" iconClassName="size-3" />
-            YOUR PATH · {subject?.shortName.toUpperCase()}
-          </p>
-          <p className="line-clamp-2 font-display text-2xl leading-tight font-semibold">{current.next.name}</p>
-          <p className="text-xs text-muted-foreground">
-            Topic {current.next.index} of {current.unitCount}
-          </p>
-        </div>
-      </div>
+            {fresh ? "START YOUR PATH" : "YOUR PATH"} · {subject?.shortName.toUpperCase()}
+          </span>
+          <span className="line-clamp-2 block font-display text-2xl leading-tight font-semibold">{current.next.name}</span>
+          <span className="block text-xs text-muted-foreground">
+            {fresh ? `${current.unitCount} topics, most asked first` : `Topic ${current.next.index} of ${current.unitCount}`}
+          </span>
+        </span>
+      </span>
       <TrailDots trail={current.trail} nextIndex={current.next.index} />
-      <Link
-        href={`/path?s=${current.subjectId}&open=${current.next.id}`}
-        className={buttonVariants({ variant: "gold", size: "xl", className: "mt-3 w-full" })}
-      >
-        Continue
-      </Link>
-    </section>
+      <span className={buttonVariants({ variant: "gold", size: "xl", className: "mt-3 w-full" })}>{fresh ? "Start here" : "Continue"}</span>
+    </Link>
   );
 }
 

@@ -34,13 +34,40 @@ function lessonsOf(topic: RawTopic): ReadLessonSummary[] {
     description: l.description ?? "",
     minutes: l.estimatedMinutes ?? null,
     topicTitle: topic.title,
+    format: "notes" as const,
   }));
   return [...own, ...(topic.subtopics ?? []).flatMap(lessonsOf)];
 }
 
-export async function readCatalogue(): Promise<ReadCatalogue> {
-  "use cache";
-  cacheLife("minutes");
+type RLLesson = { id: string; title: string; description?: string; subtopic?: string };
+type RLTopic = { id: string; title: string; lessons: RLLesson[] };
+
+/** The Read & Learn catalogue: subject -> topic -> ordered lessons, in the order EXL gives them. */
+async function readAndLearnCatalogue(): Promise<ReadSubject[]> {
+  const raw = await exl("/api/v1/read-and-learn");
+  const subjects: ReadSubject[] = [];
+  for (const s of raw.data.subjects as { id: string; name: string; topics: RLTopic[] }[]) {
+    const topics = s.topics
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        lessons: t.lessons.map((l) => ({
+          id: l.id,
+          title: l.title,
+          description: l.description ?? "",
+          minutes: null,
+          topicTitle: l.subtopic || t.title,
+          format: "embed" as const,
+        })),
+      }))
+      .filter((t) => t.lessons.length > 0);
+    if (topics.length) subjects.push({ slug: s.id, name: s.name, subjectId: jambSubject(s.id, s.name), topics });
+  }
+  return subjects;
+}
+
+/** The older module lessons. Only used while the Read & Learn API is not live on the EXL address. */
+async function legacyCatalogue(): Promise<ReadSubject[]> {
   const raw = await exl("/api/v1/catalogue");
   const subjects: ReadSubject[] = [];
   for (const s of raw.data as { slug: string; name: string; topics: RawTopic[] }[]) {
@@ -49,7 +76,36 @@ export async function readCatalogue(): Promise<ReadCatalogue> {
       .filter((t) => t.lessons.length > 0);
     if (topics.length) subjects.push({ slug: s.slug, name: s.name, subjectId: jambSubject(s.slug, s.name), topics });
   }
-  return { subjects };
+  return subjects;
+}
+
+export async function readCatalogue(): Promise<ReadCatalogue> {
+  "use cache";
+  cacheLife("minutes");
+  try {
+    return { subjects: await readAndLearnCatalogue() };
+  } catch {
+    return { subjects: await legacyCatalogue() };
+  }
+}
+
+/** The page of one Read & Learn lesson, fetched once and reused. Served to the browser by our own route so access can be decided here. */
+async function fetchEmbedHtml(id: string): Promise<string> {
+  "use cache";
+  cacheLife("hours");
+  const res = await fetch(`${BASE}/api/v1/read-and-learn/lessons/${id}/embed`);
+  // A failure throws, so it is never cached: the next visit tries again.
+  if (!res.ok) throw new Error(`EXL ${res.status}`);
+  return res.text();
+}
+
+export async function readEmbedHtml(id: string): Promise<string | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  try {
+    return await fetchEmbedHtml(id);
+  } catch {
+    return null;
+  }
 }
 
 /* Lesson content --------------------------------------------------------------------------------------- */
@@ -116,11 +172,33 @@ function block(b: RawBlock): ReadBlock[] {
 export async function readLesson(id: string): Promise<ReadLesson | null> {
   "use cache";
   cacheLife("minutes");
+  const { subjects } = await readCatalogue();
+  for (const s of subjects) {
+    for (const t of s.topics) {
+      const l = t.lessons.find((x) => x.id === id);
+      if (l?.format === "embed") {
+        return {
+          id,
+          title: l.title,
+          description: l.description,
+          minutes: null,
+          format: "embed",
+          subjectSlug: s.slug,
+          subjectId: s.subjectId,
+          topicTitle: l.topicTitle,
+          groupTitle: t.title,
+          sections: [],
+        };
+      }
+    }
+  }
   let raw;
   try {
     raw = await exl(`/api/v1/lessons/${encodeURIComponent(id)}`);
-  } catch {
-    return null;
+  } catch (e) {
+    // Only "no such lesson" is an answer worth keeping. Any other failure throws, so it is not cached.
+    if (e instanceof Error && /(400|404)/.test(e.message)) return null;
+    throw e;
   }
   const c = raw.content as {
     title: string;
@@ -141,6 +219,7 @@ export async function readLesson(id: string): Promise<ReadLesson | null> {
     title: c.title,
     description: c.description ?? "",
     minutes: c.estimatedMinutes ?? null,
+    format: "notes",
     subjectSlug: slug,
     subjectId: jambSubject(slug, slug),
     topicTitle: c.parentSubtopic || c.parentTopic || "",

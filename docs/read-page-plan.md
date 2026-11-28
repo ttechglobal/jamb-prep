@@ -4,6 +4,10 @@ Status: built 2026-11-28 (phases 1 to 3, without the database tables). It reads 
 
 How it works: `lib/read/exl.ts` (server only) fetches and flattens the EXL catalogue and lessons and caches them; `app/api/read/*` hands them to the browser; `/read` is the hub and `/read/[id]` the reader. Lessons are matched to a JAMB topic by name in `lib/read/match.ts` (exact, then contains, then same key words). A lesson with no match still shows and offers practice for the whole subject. To pin a wrong or missing match, add a line to `OVERRIDES` there. There is no `read_topic_map` table, admin page, progress table or paywall yet. `EXL_API_BASE` overrides the address (default https://exllearn.vercel.app).
 
+**Update (2026-11-28, later): Read & Learn API.** EXL added a second API for key-points ("Read & Learn") lessons: `/api/v1/read-and-learn` (catalogue), `/lessons/{id}/embed` (a full reader page) and `/lessons/{id}/content` (data, format `exl-keypoints-1`). Read now uses it: the catalogue comes from there and a lesson opens in EXL's own reader inside a frame, served through our `/api/read/embed/[id]` (cached, and the one place a free or paid check will go). If `/api/v1/read-and-learn` is not live on the EXL address (it returned 404 on the live site when checked, because it was not deployed yet), Read falls back to the older module catalogue and the notes renderer. EXL must be deployed with the new routes before Read shows Maths-free, Physics or the new Chemistry lessons live.
+
+Caching: everything is cached on the server (Next `use cache`), at the edge (Cache-Control on `/api/read/*`) and in the browser (`lib/cache.ts`). Student-specific data is dropped on sign in, sign out and when a round finishes.
+
 Original plan follows. Status: plan only. Design is on the canvas (Read hub, Read topic, Read desktop). Source: EXL Learn's read-only Content API (`_projects_/exl_learn/exl-learn-concept/docs/content-api.md` and `lesson-api-v1.4.md`).
 
 ## What the Read page is

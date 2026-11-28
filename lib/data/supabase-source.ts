@@ -1,3 +1,4 @@
+import { MINUTE, HOUR, cached, clearUserCache } from "@/lib/cache";
 import { emptyProgress } from "@/lib/game/rules";
 import { currentSession, ensureSession, supabase } from "@/lib/supabase/client";
 import type { PlayerProgress, PracticeSession, Profile, QuestionReveal, SessionResult, SessionReward, Topic } from "@/lib/types";
@@ -28,6 +29,7 @@ function withoutNull(result: SessionResult | null) {
 
 export const supabaseSource: DataSource = {
   async listTopics(subjectId) {
+    return cached(`topics:${subjectId}`, HOUR, async () => {
     const { data, error } = await supabase()
       .from("topics")
       .select("id, subject_id, name")
@@ -37,9 +39,11 @@ export const supabaseSource: DataSource = {
       .order("name");
     if (error) throw new Error("Couldn't load topics. Check your connection and try again.");
     return data.map((t): Topic => ({ id: t.id, subjectId: t.subject_id, name: t.name }));
+    });
   },
 
-  countQuestions: (subjectId, topicId) => rpc<number>("count_questions", { p_subject_id: subjectId, p_topic_id: topicId ?? null }),
+  countQuestions: (subjectId, topicId) =>
+    cached(`count:${subjectId}:${topicId ?? ""}`, 10 * MINUTE, () => rpc<number>("count_questions", { p_subject_id: subjectId, p_topic_id: topicId ?? null })),
 
   async startSession(config) {
     await ensureSession();
@@ -56,6 +60,8 @@ export const supabaseSource: DataSource = {
 
   async submitSession(id) {
     const result = await rpc<SessionResult>("submit_session", { p_session_id: id });
+    // A finished round changes the path, trends, activity and ranks, so their saved copies are out of date.
+    clearUserCache();
     return withoutNull(result)!;
   },
 

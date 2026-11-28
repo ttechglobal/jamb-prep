@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { trackOnce } from "@/lib/analytics";
+import { MINUTE, cached } from "@/lib/cache";
 import { useAppState } from "@/lib/app-state";
 import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -54,8 +55,11 @@ export default function LeaderboardPage() {
     setLoading(true);
     setFailed(false);
     try {
-      const { data, error } = await supabase().rpc("get_leaderboard", { p_period: p });
-      if (error) throw error;
+      const data = await cached(`user:leaderboard:${p}`, MINUTE, async () => {
+        const { data, error } = await supabase().rpc("get_leaderboard", { p_period: p });
+        if (error) throw error;
+        return data;
+      });
       setBoards((b) => ({ ...b, [p]: parse(data) }));
     } catch {
       setFailed(true);
