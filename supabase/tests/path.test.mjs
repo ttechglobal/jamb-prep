@@ -6,7 +6,7 @@ import postgres from "postgres";
 import { readFileSync } from "node:fs";
 
 const sql = postgres(process.env.SUPABASE_DB_URL, { max: 1, prepare: false, onnotice: () => {} });
-const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
+const MIGRATIONS = ["20261128000001_path_units_and_stars.sql", "20261128000002_path_units_physics_chemistry.sql", "20261128000003_path_units_other_subjects.sql"].map((f) => new URL(`../migrations/${f}`, import.meta.url));
 
 const U = {
   student: "00000000-0000-4000-8000-0000000000b1",
@@ -47,9 +47,11 @@ try {
 
     // Any migration not applied yet runs inside the test transaction, so it is checked before it is real.
     const [first] = await tx`select to_regclass('public.path_units') as t`;
-    const seeded = first.t ? (await tx`select count(*)::int as n from public.path_units where subject_id = 'physics'`)[0].n > 0 : false;
+    const has = async (subject) => (first.t ? (await tx`select count(*)::int as n from public.path_units where subject_id = ${subject}`)[0].n > 0 : false);
+    const seeded = (await has("physics")) && (await has("biology"));
     if (!first.t) await tx.unsafe(readFileSync(MIGRATIONS[0], "utf8"));
-    if (!seeded) await tx.unsafe(readFileSync(MIGRATIONS[1], "utf8"));
+    if (!(await has("physics"))) await tx.unsafe(readFileSync(MIGRATIONS[1], "utf8"));
+    if (!(await has("biology"))) await tx.unsafe(readFileSync(MIGRATIONS[2], "utf8"));
     if (!first.t || !seeded) console.log("(some path migrations were not applied yet: ran them inside the test transaction)");
 
     for (const [key, id] of Object.entries(U)) {
@@ -110,8 +112,8 @@ try {
     const topics = await tx`select topic_id from public.path_unit_topics put join public.path_units pu on pu.id = put.unit_id where pu.subject_id = 'mathematics'`;
     check("all 23 Maths topics are in a unit", topics.length === 23, topics.length);
 
-    // Physics and Chemistry: every active topic sits in a unit, and every unit can carry rounds on two days.
-    for (const [subject, units] of [["physics", 14], ["chemistry", 10]]) {
+    // Every other seeded subject: every active topic sits in a unit, and every unit can carry rounds on two days.
+    for (const [subject, units] of [["physics", 14], ["chemistry", 10], ["biology", 9], ["accounting", 10], ["commerce", 10], ["economics", 10]]) {
       const p = await rpc("get_path", [subject]);
       check(`${subject} has ${units} units`, p.units.length === units, p.units.length);
       check(`every ${subject} unit holds at least 20 questions`, p.units.every((u) => u.questionCount >= 20), p.units.filter((u) => u.questionCount < 20).map((u) => [u.slug, u.questionCount]));
