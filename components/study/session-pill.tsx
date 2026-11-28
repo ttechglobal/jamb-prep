@@ -8,7 +8,7 @@ import { clock, useStudyTimer } from "@/lib/study/session";
 import { cn } from "@/lib/utils";
 
 /** Pages where a student is signed in and using the app. The landing page and sign-in screens never show the timer. */
-const IN_APP = /^\/(practice|path|read|games|leaderboard|settings|progress|session|start|study|partners)(\/|$)/;
+const IN_APP = /^\/(practice|path|read|games|leaderboard|levels|settings|progress|session|start|study|partners)(\/|$)/;
 
 /**
  * The running timer, always in reach. It sits above the bottom bar, or under the top bar on pages that take the whole

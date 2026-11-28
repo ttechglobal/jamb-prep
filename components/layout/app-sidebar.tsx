@@ -63,7 +63,9 @@ export function AppSidebar() {
       </nav>
 
       <div className="flex flex-col gap-3 border-t-2 p-4">
-        <LevelBar xp={progress.xp} />
+        <Link href="/levels" aria-label="Your level and ranks" className="-m-1.5 rounded-xl p-1.5 transition hover:bg-muted">
+          <LevelBar xp={progress.xp} />
+        </Link>
         <Link
           href="/settings"
           className="flex min-h-10 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"

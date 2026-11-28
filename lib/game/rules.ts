@@ -50,12 +50,15 @@ function daysBetween(from: string, to: string) {
  */
 export const xpForLevel = (level: number) => 10 * (level - 1) * (level + 3);
 
+/** The rank a level belongs to. */
+export const rankFor = (level: number) => [...RANKS].reverse().find((t) => level >= t.from) ?? RANKS[0];
+
 export function levelFor(xp: number) {
   let level = 1;
   while (xp >= xpForLevel(level + 1)) level++;
   const floor = xpForLevel(level);
   const next = xpForLevel(level + 1);
-  const rank = [...RANKS].reverse().find((t) => level >= t.from) ?? RANKS[0];
+  const rank = rankFor(level);
   const nextRank = RANKS.find((t) => t.from > level) ?? null;
   return {
     level,

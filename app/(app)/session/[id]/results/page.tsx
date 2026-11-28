@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowRight, ChevronRight, ClipboardCheck, Clock, Info, Target, Zap } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
-import { Confetti, Meter, Stars, SubjectIcon } from "@/components/game/game-ui";
+import { Confetti, LevelBadge, Meter, Stars, SubjectIcon } from "@/components/game/game-ui";
+import { rankFor } from "@/lib/game/rules";
 import { PathOutcome } from "@/components/path/path-outcome";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -145,6 +146,8 @@ function Results() {
         />
       </section>
 
+      {reward.levelAfter > reward.levelBefore ? <LevelUp from={reward.levelBefore} to={reward.levelAfter} /> : null}
+
       <PathOutcome path={reward.path} subjectId={subject} />
 
       {isGuest ? (
@@ -237,6 +240,25 @@ function MockSummary({ result }: { result: SessionResult }) {
         <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
         <span>This is a practice simulation. Your mock score is not a prediction of your actual UTME result.</span>
       </p>
+    </section>
+  );
+}
+
+/** Shown when a round carried the student into a new level, and says so plainly when it also brings a new rank. */
+function LevelUp({ from, to }: { from: number; to: number }) {
+  const rank = rankFor(to);
+  const newRank = rankFor(from).title !== rank.title;
+  return (
+    <section aria-label="Level up" className="game-card mt-4 flex items-center gap-4 border-gold bg-gold-soft p-4">
+      <LevelBadge level={to} className="size-16" />
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-xs font-semibold tracking-wide text-gold-ink">{newRank ? "NEW RANK" : "LEVEL UP"}</p>
+        <p className="font-display text-xl leading-tight font-semibold text-gold-ink">{newRank ? rank.title : `Level ${to}`}</p>
+        <p className="text-sm text-gold-ink/80">{newRank ? `You reached level ${to}. Keep climbing.` : `You are ${rank.title === "Aspirant" ? "an" : "a"} ${rank.title}.`}</p>
+      </div>
+      <Link href="/levels" className="shrink-0 text-sm font-semibold text-gold-ink underline">
+        Ranks
+      </Link>
     </section>
   );
 }

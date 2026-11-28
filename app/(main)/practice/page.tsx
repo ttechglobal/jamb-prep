@@ -42,7 +42,9 @@ export default function PracticePage() {
         {/* Phone: level and goal first. Desktop: they move to the right-hand column. */}
         <aside aria-label="Your progress" className="flex flex-col gap-4 lg:order-2">
           <section className="game-card p-4">
-            <LevelBar xp={progress.xp} />
+            <Link href="/levels" aria-label="Your level and ranks" className="-mx-2 block rounded-xl px-2 py-1 transition hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+              <LevelBar xp={progress.xp} />
+            </Link>
             <Link
               href="/settings?edit=targets"
               aria-label={`Your desired JAMB score is ${totalTarget(profile)} out of ${UTME_FORMAT.maxTotal}. Tap to edit.`}
