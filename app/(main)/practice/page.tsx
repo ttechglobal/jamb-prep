@@ -15,7 +15,7 @@ import { useAppState } from "@/lib/app-state";
 import { quickFive } from "@/lib/engine/presets";
 import { SUBJECTS } from "@/lib/catalog";
 import { UTME_FORMAT } from "@/lib/exam-format";
-import { PARTNERS_VISIBLE } from "@/lib/path/flag";
+import { PARTNERS_VISIBLE, PATH_ENABLED } from "@/lib/path/flag";
 import { totalTarget } from "@/lib/profile";
 import { cn } from "@/lib/utils";
 
@@ -73,9 +73,10 @@ export default function PracticePage() {
 
           {PARTNERS_VISIBLE ? <PartnerCard /> : null}
 
-          <section aria-label="More practice" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <section aria-label="More practice" className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             <QuickFiveCard subjectIds={profile.subjectIds} className="lg:hidden" />
-            <ModeCard href="/read" icon={BookOpen} tint="bg-sky-soft text-sky" title="Read" description="Notes by topic" className="hidden lg:flex" />
+            {/* Notes are read from the study path. Read only gets its own card while the path is switched off. */}
+            {PATH_ENABLED ? null : <ModeCard href="/read" icon={BookOpen} tint="bg-sky-soft text-sky" title="Read" description="Notes by topic" className="hidden lg:flex" />}
             <ModeCard
               href="/practice/subject"
               icon={BookOpenCheck}

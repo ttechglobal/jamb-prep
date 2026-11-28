@@ -166,19 +166,22 @@ function EmbedReader({ lesson, topicId }: { lesson: ReadLesson; topicId: string 
     return () => window.removeEventListener("message", onMessage);
   }, [lesson.id, isGuest, progress, setProgress]);
 
+  // Back to wherever the student came from, usually their study path.
+  const leave = () => (window.history.length > 1 ? router.back() : router.push("/read"));
   const practise = () => lesson.subjectId && start(subjectPractice(lesson.subjectId, topicId, 10));
   const pct = Math.round(frac * 100);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <header className="mx-auto flex w-full max-w-3xl items-center gap-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2">
-        <Link
-          href="/read"
-          aria-label="Close and go back to Read"
+        <button
+          type="button"
+          onClick={leave}
+          aria-label="Close the lesson"
           className="grid size-11 shrink-0 place-items-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <X className="size-6" aria-hidden />
-        </Link>
+        </button>
         <div
           role="progressbar"
           aria-label="Progress through the lesson"
@@ -231,8 +234,8 @@ function EmbedReader({ lesson, topicId }: { lesson: ReadLesson; topicId: string 
                   {topicId ? "Practise this topic" : "Practise this subject"}
                 </Button>
               ) : null}
-              <Button size="xl" variant="outline" className="flex-1" onClick={() => router.push("/read")}>
-                Back to Read
+              <Button size="xl" variant="outline" className="flex-1" onClick={leave}>
+                Back
               </Button>
             </div>
           </div>

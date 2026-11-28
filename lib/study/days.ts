@@ -73,3 +73,22 @@ export function nextStudyLabel(times: StudyTime[], now = new Date()): string | n
   }
   return best?.text ?? null;
 }
+
+/** The next study time as a short call to action: "Study by 6:00 pm", "Study by 7:00 am tomorrow", or null with no times. */
+export function studyByLabel(times: StudyTime[], now = new Date()): string | null {
+  let best: { at: number; text: string } | null = null;
+  for (const t of times) {
+    const [h, m] = t.time.split(":").map(Number);
+    for (let ahead = 0; ahead < 8; ahead++) {
+      const day = new Date(now);
+      day.setDate(now.getDate() + ahead);
+      day.setHours(h, m, 0, 0);
+      const iso = day.getDay() === 0 ? 7 : day.getDay();
+      if (day.getTime() <= now.getTime() || !t.days.includes(iso)) continue;
+      const when = ahead === 0 ? "" : ahead === 1 ? " tomorrow" : ` on ${DAY_SHORT[iso - 1]}`;
+      if (!best || day.getTime() < best.at) best = { at: day.getTime(), text: `Study by ${timeLabel(t.time)}${when}` };
+      break;
+    }
+  }
+  return best?.text ?? null;
+}

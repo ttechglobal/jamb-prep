@@ -13,8 +13,7 @@ import { cn } from "@/lib/utils";
 /** Desktop navigation. Phones use the bottom bar instead. */
 const NAV = [
   { href: "/practice", label: "Practice" },
-  ...(PATH_ENABLED ? [{ href: "/path", label: "Path" }] : []),
-  { href: "/read", label: "Read" },
+  ...(PATH_ENABLED ? [{ href: "/path", label: "Study path" }] : [{ href: "/read", label: "Read" }]),
   { href: "/games", label: "Games" },
   { href: "/leaderboard", label: "Leaderboard" },
 ];

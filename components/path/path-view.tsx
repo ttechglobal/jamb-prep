@@ -16,6 +16,7 @@ import { SUBJECTS } from "@/lib/catalog";
 import { quickFive } from "@/lib/engine/presets";
 import { getPath, getPathOverview, setPathPrefs } from "@/lib/path/client";
 import { buildSections, isStarted, nextUnit, orderUnits } from "@/lib/path/layout";
+import { loadUnitReading, type UnitLesson } from "@/lib/read/for-unit";
 import type { PathData, PathOrder, PathOverview, PathUnit } from "@/lib/path/types";
 import { cn } from "@/lib/utils";
 
@@ -65,7 +66,7 @@ export function PathView() {
 
   return (
     <div className="mx-auto max-w-xl lg:max-w-none">
-      <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">Your path</h1>
+      <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">Your study path</h1>
       <p className="mt-0.5 text-muted-foreground">Go topic by topic. Earn stars as you go.</p>
 
       <div className="lg:hidden">{switcher("chips")}</div>
@@ -158,6 +159,7 @@ function SubjectPath({ subjectId, openId, sideSwitcher }: { subjectId: string; o
   const [failed, setFailed] = useState(false);
   const [order, setOrder] = useState<PathOrder>("asked");
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
+  const [reading, setReading] = useState<Map<string, UnitLesson[]>>(new Map());
   const subject = SUBJECTS.find((s) => s.id === subjectId);
 
   useEffect(() => {
@@ -184,6 +186,21 @@ function SubjectPath({ subjectId, openId, sideSwitcher }: { subjectId: string; o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectId]);
 
+  // Notes for each topic on the trail. They match by name, so new notes appear without any change here.
+  useEffect(() => {
+    if (!data || data.units.length === 0) return;
+    let live = true;
+    loadUnitReading(
+      subjectId,
+      data.units.map((u) => ({ id: u.id, name: u.name })),
+    )
+      .then((m) => live && setReading(m))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [data, subjectId]);
+
   const sections = useMemo(() => (data ? buildSections(data.units, order, data.checkpoints) : []), [data, order]);
   const ordered = useMemo(() => (data ? orderUnits(data.units, order) : []), [data, order]);
   const next = data ? nextUnit(data.units, order) : null;
@@ -194,10 +211,10 @@ function SubjectPath({ subjectId, openId, sideSwitcher }: { subjectId: string; o
     void setPathPrefs(null, value).catch(() => {});
   }
 
-  function begin() {
+  function begin(count: number) {
     if (!sheet) return;
     if (sheet.kind === "unit") {
-      start({ mode: "subject", subjectIds: [subjectId], unitId: sheet.unit.id, count: 10, feedback: "instant" });
+      start({ mode: "subject", subjectIds: [subjectId], unitId: sheet.unit.id, count, feedback: "instant" });
     } else {
       void track("path_check_started", { subject: subjectId });
       start({ mode: "subject", subjectIds: [subjectId], unitIds: sheet.unitIds, checkpoint: true, count: 10, feedback: "instant" });
@@ -372,7 +389,13 @@ function SubjectPath({ subjectId, openId, sideSwitcher }: { subjectId: string; o
         ))}
       </div>
 
-      <UnitSheet target={sheet} starting={starting} onStart={begin} onClose={() => setSheet(null)} />
+      <UnitSheet
+        target={sheet}
+        starting={starting}
+        lessons={sheet?.kind === "unit" ? (reading.get(sheet.unit.id) ?? []) : []}
+        onStart={begin}
+        onClose={() => setSheet(null)}
+      />
     </div>
   );
 }

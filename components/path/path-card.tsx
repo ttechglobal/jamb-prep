@@ -46,14 +46,14 @@ export function PathCard({ className }: { className?: string }) {
     return (
       <Link
         href="/path"
-        aria-label="Your path"
+        aria-label="Your study path"
         className={cn("game-card game-tap flex items-center gap-3 border-violet/30 bg-violet-soft/40 p-4", className)}
       >
         <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-2xl bg-violet-soft text-violet">
           <Route className="size-6" strokeWidth={2.2} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block font-display text-lg font-semibold leading-tight">Your path</span>
+          <span className="block font-display text-lg font-semibold leading-tight">Your study path</span>
           <span className="block text-sm text-muted-foreground">Every topic is solid. Revisit any of them.</span>
         </span>
         <span className={buttonVariants({ variant: "outline", size: "lg" })}>See it</span>
@@ -67,7 +67,7 @@ export function PathCard({ className }: { className?: string }) {
   return (
     <Link
       href={`/path?s=${current.subjectId}&open=${current.next.id}`}
-      aria-label={`${fresh ? "Start" : "Continue"} your path: ${current.next.name}`}
+      aria-label={`${fresh ? "Start" : "Continue"} your study path: ${current.next.name}`}
       className={cn("game-card game-tap block border-violet/40 bg-violet-soft/40 p-4 lg:flex lg:items-center lg:gap-5 lg:p-5", className)}
     >
       <span className="flex items-center gap-3 lg:min-w-0 lg:flex-1 lg:gap-5">
@@ -80,7 +80,7 @@ export function PathCard({ className }: { className?: string }) {
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5 font-display text-xs font-semibold tracking-wide text-violet">
             <SubjectIcon id={current.subjectId} className="size-5 rounded-md" iconClassName="size-3" />
-            {fresh ? "START YOUR PATH" : "YOUR PATH"} · {subject?.shortName.toUpperCase()}
+            {fresh ? "START YOUR STUDY PATH" : "YOUR STUDY PATH"} · {subject?.shortName.toUpperCase()}
           </span>
           <span className="line-clamp-2 font-display text-2xl leading-tight font-semibold">{current.next.name}</span>
           <span className="block text-xs text-muted-foreground">

@@ -16,6 +16,7 @@ import {
   WEEKDAYS,
   daysLabel,
   nextStudyLabel,
+  studyByLabel,
   presetOf,
   problemWith,
   timeLabel,
@@ -361,7 +362,7 @@ export function StudyTimesPrompt() {
   }, [isGuest]);
 
   if (isGuest || times === null) return null;
-  const next = nextStudyLabel(times);
+  const studyBy = studyByLabel(times);
   return (
     <Link href="/settings?edit=study" className="game-card game-tap flex items-center gap-3 p-4">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold-soft text-gold-ink">
@@ -369,10 +370,10 @@ export function StudyTimesPrompt() {
       </span>
       <span className="min-w-0 flex-1">
         <span className="block font-display text-[1.05rem] font-semibold leading-tight">
-          {times.length === 0 ? "Set your study times" : "Your study times"}
+          {times.length === 0 ? "Set study time" : (studyBy ?? "Study times")}
         </span>
         <span className="block text-xs text-muted-foreground">
-          {times.length === 0 ? "Pick when you study and we'll remind you." : next ? `Next reminder: ${next}` : "Tap to change them."}
+          {times.length === 0 ? "Pick when you study and we'll remind you." : "We'll remind you. Tap to change."}
         </span>
       </span>
       <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden />

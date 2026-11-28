@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const CHOICES: { value: PathMode; title: string; text: string; icon: typeof Route; tint: string; tag?: string }[] = [
   {
     value: "path",
-    title: "Follow my path",
+    title: "Follow my study path",
     text: "Go topic by topic in each subject. Earn stars as you go and always know what is next.",
     icon: Route,
     tint: "bg-violet-soft text-violet",
@@ -16,7 +16,7 @@ const CHOICES: { value: PathMode; title: string; text: string; icon: typeof Rout
   {
     value: "practice",
     title: "Just practise",
-    text: "Jump into questions whenever you like. Your path waits on Home if you change your mind.",
+    text: "Jump into questions whenever you like. Your study path waits on Home if you change your mind.",
     icon: Zap,
     tint: "bg-gold-soft text-gold-ink",
   },
